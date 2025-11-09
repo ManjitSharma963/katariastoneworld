@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../landing/Header';
 import Footer from '../landing/Footer';
 import SEO from './SEO';
 import './InquiryForm.css';
+import { submitBilling, formatCartItemsForBilling } from '../services/billingApi';
 
 export default function InquiryForm() {
-	const [form, setForm] = useState({ name: '', phone: '', email: '', message: '' });
+	const location = useLocation();
+	const navigate = useNavigate();
+	const isFromCart = location.state?.fromCart || false;
+	const cartData = location.state || {};
+	
+	const [form, setForm] = useState({ 
+		name: '', 
+		phone: cartData.customerMobileNumber || '', 
+		email: '', 
+		message: '' 
+	});
 	const [status, setStatus] = useState('idle');
 	const [errors, setErrors] = useState({});
 
@@ -45,6 +57,35 @@ export default function InquiryForm() {
 		try {
 			setStatus('loading');
 			
+			// If coming from cart, submit billing data to API
+			if (isFromCart && cartData.cart && cartData.cart.length > 0) {
+				try {
+					const billingData = {
+						customerMobileNumber: form.phone || cartData.customerMobileNumber || '',
+						items: formatCartItemsForBilling(cartData.cart),
+						taxPercentage: cartData.taxPercentage || 0,
+						discountAmount: cartData.discountAmount || 0,
+						totalAmount: cartData.totalAmount || 0
+					};
+
+					// Submit to billing API
+					await submitBilling(billingData);
+					
+					// Show success and redirect after 2 seconds
+					setStatus('success');
+					setTimeout(() => {
+						navigate('/');
+					}, 2000);
+					return;
+				} catch (apiError) {
+					console.error('Billing API error:', apiError);
+					setStatus('error');
+					setErrors({ submit: 'Failed to submit billing. Please try again.' });
+					return;
+				}
+			}
+			
+			// Regular inquiry form - send via WhatsApp
 			// Format message for WhatsApp
 			const whatsappMessage = `*New Quotation Request*\n\n` +
 				`*Name:* ${form.name}\n` +
@@ -88,9 +129,12 @@ export default function InquiryForm() {
 							<div className="inquiry-icon-wrapper">
 								<i className="fa-solid fa-file-invoice-dollar" />
 							</div>
-							<h1 className="inquiry-title">Get a Quotation</h1>
+							<h1 className="inquiry-title">{isFromCart ? 'Complete Your Order' : 'Get a Quotation'}</h1>
 							<p className="inquiry-subtitle">
-								Fill out the form below and we'll get back to you with a personalized quote
+								{isFromCart 
+									? 'Please provide your details to complete the billing process'
+									: 'Fill out the form below and we\'ll get back to you with a personalized quote'
+								}
 							</p>
 						</div>
 
@@ -168,6 +212,36 @@ export default function InquiryForm() {
 								</div>
 							</div>
 
+							{isFromCart && cartData.cart && cartData.cart.length > 0 && (
+								<div style={{ 
+									background: '#f9fafb', 
+									padding: '20px', 
+									borderRadius: '12px', 
+									marginBottom: '24px',
+									border: '1px solid #e5e7eb'
+								}}>
+									<h3 style={{ marginBottom: '16px', color: 'var(--accent)', fontSize: '18px' }}>Order Summary</h3>
+									<div style={{ marginBottom: '8px' }}>
+										<strong>Items:</strong> {cartData.cart.length}
+									</div>
+									<div style={{ marginBottom: '8px' }}>
+										<strong>Tax:</strong> {cartData.taxPercentage || 0}%
+									</div>
+									<div style={{ marginBottom: '8px' }}>
+										<strong>Discount:</strong> ₹{(cartData.discountAmount || 0).toLocaleString()}
+									</div>
+									<div style={{ 
+										paddingTop: '12px', 
+										borderTop: '2px solid #e5e7eb',
+										marginTop: '8px',
+										fontSize: '18px',
+										fontWeight: '700'
+									}}>
+										<strong>Total Amount:</strong> ₹{(cartData.totalAmount || 0).toFixed(2)}
+									</div>
+								</div>
+							)}
+
 							<button 
 								type="submit" 
 								className={`submit-btn ${status === 'loading' ? 'loading' : ''}`}
@@ -176,12 +250,12 @@ export default function InquiryForm() {
 								{status === 'loading' ? (
 									<>
 										<i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '8px' }} />
-										Sending...
+										{isFromCart ? 'Submitting Order...' : 'Sending...'}
 									</>
 								) : (
 									<>
-										<i className="fa-solid fa-paper-plane" style={{ marginRight: '8px' }} />
-										Request Quote
+										<i className={`fa-solid ${isFromCart ? 'fa-check-circle' : 'fa-paper-plane'}`} style={{ marginRight: '8px' }} />
+										{isFromCart ? 'Complete Order' : 'Request Quote'}
 									</>
 								)}
 							</button>
@@ -189,13 +263,18 @@ export default function InquiryForm() {
 							{status === 'success' && (
 								<div className="success-message">
 									<i className="fa-solid fa-circle-check" />
-									<span>Thanks! We've opened WhatsApp. Please send the message to complete your request.</span>
+									<span>
+										{isFromCart 
+											? 'Order submitted successfully! Redirecting to home page...'
+											: 'Thanks! We\'ve opened WhatsApp. Please send the message to complete your request.'
+										}
+									</span>
 								</div>
 							)}
 							{status === 'error' && (
 								<div className="error-message-box">
 									<i className="fa-solid fa-circle-exclamation" />
-									<span>Please check the form and try again.</span>
+									<span>{errors.submit || 'Please check the form and try again.'}</span>
 								</div>
 							)}
 						</form>

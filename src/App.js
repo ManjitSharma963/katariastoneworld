@@ -24,7 +24,12 @@ function Layout({ children }) {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
       <SEO title="Tiles in Gurgaon" />
       <Layout>
         <Routes>

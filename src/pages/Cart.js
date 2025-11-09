@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Header from '../landing/Header';
 import Footer from '../landing/Footer';
 import SEO from '../components/SEO';
+import { submitBilling, formatCartItemsForBilling } from '../services/billingApi';
 
 export default function Cart() {
 	const { cart, removeFromCart, updateSqft, increaseSqft, decreaseSqft, getCartCount, clearCart } = useCart();
+	const navigate = useNavigate();
 	const cartCount = getCartCount();
 	const [taxRate, setTaxRate] = useState(() => {
 		const saved = localStorage.getItem('cartTaxRate');
@@ -20,6 +22,36 @@ export default function Cart() {
 		const saved = localStorage.getItem('cartMobileNumber');
 		return saved || '';
 	});
+	const [customerName, setCustomerName] = useState(() => {
+		const saved = localStorage.getItem('cartCustomerName');
+		return saved || '';
+	});
+	const [addressLine1, setAddressLine1] = useState(() => {
+		const saved = localStorage.getItem('cartAddressLine1');
+		return saved || '';
+	});
+	const [city, setCity] = useState(() => {
+		const saved = localStorage.getItem('cartCity');
+		return saved || '';
+	});
+	const [state, setState] = useState(() => {
+		const saved = localStorage.getItem('cartState');
+		return saved || '';
+	});
+	const [pincode, setPincode] = useState(() => {
+		const saved = localStorage.getItem('cartPincode');
+		return saved || '';
+	});
+	const [gstin, setGstin] = useState(() => {
+		const saved = localStorage.getItem('cartGstin');
+		return saved || '';
+	});
+	const [email, setEmail] = useState(() => {
+		const saved = localStorage.getItem('cartEmail');
+		return saved || '';
+	});
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [submitError, setSubmitError] = useState('');
 
 	useEffect(() => {
 		localStorage.setItem('cartTaxRate', taxRate.toString());
@@ -32,6 +64,34 @@ export default function Cart() {
 	useEffect(() => {
 		localStorage.setItem('cartMobileNumber', mobileNumber);
 	}, [mobileNumber]);
+
+	useEffect(() => {
+		localStorage.setItem('cartCustomerName', customerName);
+	}, [customerName]);
+
+	useEffect(() => {
+		localStorage.setItem('cartAddressLine1', addressLine1);
+	}, [addressLine1]);
+
+	useEffect(() => {
+		localStorage.setItem('cartCity', city);
+	}, [city]);
+
+	useEffect(() => {
+		localStorage.setItem('cartState', state);
+	}, [state]);
+
+	useEffect(() => {
+		localStorage.setItem('cartPincode', pincode);
+	}, [pincode]);
+
+	useEffect(() => {
+		localStorage.setItem('cartGstin', gstin);
+	}, [gstin]);
+
+	useEffect(() => {
+		localStorage.setItem('cartEmail', email);
+	}, [email]);
 
 	if (cartCount === 0) {
 		return (
@@ -46,9 +106,13 @@ export default function Cart() {
 					<p style={{ color: 'var(--muted)', marginBottom: '24px' }}>
 						Start adding items to your cart to see them here.
 					</p>
-					<Link to="/" className="cta" style={{ display: 'inline-block' }}>
+					<button 
+						onClick={() => navigate('/')} 
+						className="cta" 
+						style={{ display: 'inline-block', cursor: 'pointer' }}
+					>
 						Continue Shopping <i className="fa-solid fa-arrow-right" style={{ marginLeft: '8px', fontSize: '12px' }} />
-					</Link>
+					</button>
 				</div>
 				<Footer />
 			</>
@@ -288,26 +352,167 @@ export default function Cart() {
 											<span style={{ fontWeight: '700', minWidth: '80px', textAlign: 'right', color: '#10b981' }}>- ₹ {(discountAmount || 0).toLocaleString()}</span>
 										</div>
 									</div>
-									<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-										<span style={{ fontWeight: '600' }}>Mobile Number:</span>
-										<input
-											type="tel"
-											placeholder="Enter mobile number"
-											value={mobileNumber}
-											onChange={(e) => {
-												const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-												setMobileNumber(value);
-											}}
-											style={{
-												width: '180px',
-												padding: '6px 10px',
-												border: '1px solid #ddd',
-												borderRadius: '6px',
-												textAlign: 'left',
-												fontSize: '14px',
-												fontWeight: '500'
-											}}
-										/>
+									<div style={{ 
+										paddingTop: '16px', 
+										borderTop: '1px solid #e5e7eb', 
+										marginTop: '12px' 
+									}}>
+										<h3 style={{ 
+											fontSize: '16px', 
+											fontWeight: '700', 
+											marginBottom: '16px',
+											color: 'var(--accent)'
+										}}>
+											Customer Information
+										</h3>
+										<div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+											<div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+												<label style={{ fontWeight: '600', fontSize: '14px' }}>Name: *</label>
+												<input
+													type="text"
+													placeholder="Enter customer name"
+													value={customerName}
+													onChange={(e) => setCustomerName(e.target.value.slice(0, 100))}
+													style={{
+														width: '100%',
+														padding: '8px 12px',
+														border: '1px solid #ddd',
+														borderRadius: '6px',
+														fontSize: '14px',
+														boxSizing: 'border-box'
+													}}
+												/>
+											</div>
+											<div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+												<label style={{ fontWeight: '600', fontSize: '14px' }}>Mobile Number: *</label>
+												<input
+													type="tel"
+													placeholder="Enter mobile number"
+													value={mobileNumber}
+													onChange={(e) => {
+														const value = e.target.value.replace(/\D/g, '').slice(0, 15);
+														setMobileNumber(value);
+													}}
+													style={{
+														width: '100%',
+														padding: '8px 12px',
+														border: '1px solid #ddd',
+														borderRadius: '6px',
+														fontSize: '14px',
+														boxSizing: 'border-box'
+													}}
+												/>
+											</div>
+											<div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+												<label style={{ fontWeight: '600', fontSize: '14px' }}>Email:</label>
+												<input
+													type="email"
+													placeholder="Enter email address"
+													value={email}
+													onChange={(e) => setEmail(e.target.value)}
+													style={{
+														width: '100%',
+														padding: '8px 12px',
+														border: '1px solid #ddd',
+														borderRadius: '6px',
+														fontSize: '14px',
+														boxSizing: 'border-box'
+													}}
+												/>
+											</div>
+											<div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+												<label style={{ fontWeight: '600', fontSize: '14px' }}>Address Line 1: *</label>
+												<input
+													type="text"
+													placeholder="Enter address line 1"
+													value={addressLine1}
+													onChange={(e) => setAddressLine1(e.target.value)}
+													style={{
+														width: '100%',
+														padding: '8px 12px',
+														border: '1px solid #ddd',
+														borderRadius: '6px',
+														fontSize: '14px',
+														boxSizing: 'border-box'
+													}}
+												/>
+											</div>
+											<div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+												<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 200px', minWidth: '150px' }}>
+													<label style={{ fontWeight: '600', fontSize: '14px' }}>City: *</label>
+													<input
+														type="text"
+														placeholder="Enter city"
+														value={city}
+														onChange={(e) => setCity(e.target.value)}
+														style={{
+															width: '100%',
+															padding: '8px 12px',
+															border: '1px solid #ddd',
+															borderRadius: '6px',
+															fontSize: '14px',
+															boxSizing: 'border-box'
+														}}
+													/>
+												</div>
+												<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 200px', minWidth: '150px' }}>
+													<label style={{ fontWeight: '600', fontSize: '14px' }}>State: *</label>
+													<input
+														type="text"
+														placeholder="Enter state"
+														value={state}
+														onChange={(e) => setState(e.target.value)}
+														style={{
+															width: '100%',
+															padding: '8px 12px',
+															border: '1px solid #ddd',
+															borderRadius: '6px',
+															fontSize: '14px',
+															boxSizing: 'border-box'
+														}}
+													/>
+												</div>
+											</div>
+											<div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+												<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 200px', minWidth: '150px' }}>
+													<label style={{ fontWeight: '600', fontSize: '14px' }}>Pincode: *</label>
+													<input
+														type="text"
+														placeholder="Enter pincode"
+														value={pincode}
+														onChange={(e) => {
+															const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+															setPincode(value);
+														}}
+														style={{
+															width: '100%',
+															padding: '8px 12px',
+															border: '1px solid #ddd',
+															borderRadius: '6px',
+															fontSize: '14px',
+															boxSizing: 'border-box'
+														}}
+													/>
+												</div>
+												<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 200px', minWidth: '150px' }}>
+													<label style={{ fontWeight: '600', fontSize: '14px' }}>GSTIN:</label>
+													<input
+														type="text"
+														placeholder="Enter GSTIN (optional)"
+														value={gstin}
+														onChange={(e) => setGstin(e.target.value.slice(0, 20))}
+														style={{
+															width: '100%',
+															padding: '8px 12px',
+															border: '1px solid #ddd',
+															borderRadius: '6px',
+															fontSize: '14px',
+															boxSizing: 'border-box'
+														}}
+													/>
+												</div>
+											</div>
+										</div>
 									</div>
 									<div style={{ 
 										display: 'flex', 
@@ -352,9 +557,114 @@ export default function Cart() {
 						>
 							Clear Cart
 						</button>
-						<Link to="/inquiry" className="cta">
+						<button
+							onClick={async () => {
+								// Validate required fields
+								if (!customerName || customerName.trim() === '') {
+									setSubmitError('Please enter customer name');
+									return;
+								}
+								if (!mobileNumber || mobileNumber.length < 10) {
+									setSubmitError('Please enter a valid mobile number (minimum 10 digits)');
+									return;
+								}
+								if (!addressLine1 || addressLine1.trim() === '') {
+									setSubmitError('Please enter address line 1');
+									return;
+								}
+								if (!city || city.trim() === '') {
+									setSubmitError('Please enter city');
+									return;
+								}
+								if (!state || state.trim() === '') {
+									setSubmitError('Please enter state');
+									return;
+								}
+								if (!pincode || pincode.length !== 6) {
+									setSubmitError('Please enter a valid 6-digit pincode');
+									return;
+								}
+
+								setIsSubmitting(true);
+								setSubmitError('');
+
+								try {
+									const subtotal = cart.reduce((sum, item) => {
+										return sum + ((item.price || 0) * (item.sqftOrdered || 0));
+									}, 0);
+									const tax = (subtotal * taxRate) / 100;
+									const total = Math.max(0, subtotal + tax - (discountAmount || 0));
+
+									// Format address
+									const address = `${addressLine1}, ${city}, ${state} - ${pincode}`;
+
+									const billingData = {
+										customerName: customerName.trim(),
+										customerMobileNumber: mobileNumber,
+										customerEmail: email.trim() || null,
+										address: address,
+										gstin: gstin.trim() || null,
+										items: formatCartItemsForBilling(cart),
+										taxPercentage: taxRate,
+										discountAmount: discountAmount || 0,
+										totalAmount: total
+									};
+
+									// Submit to billing API
+									await submitBilling(billingData);
+
+									// Success - clear all inputs and cart
+									setCustomerName('');
+									setMobileNumber('');
+									setEmail('');
+									setAddressLine1('');
+									setCity('');
+									setState('');
+									setPincode('');
+									setGstin('');
+									setTaxRate(5);
+									setDiscountAmount(0);
+									clearCart();
+									alert('Order submitted successfully!');
+									navigate('/');
+								} catch (error) {
+									console.error('Billing API error:', error);
+									setSubmitError('Failed to submit order. Please try again.');
+									setIsSubmitting(false);
+								}
+							}}
+							className="cta"
+							style={{ cursor: 'pointer', opacity: isSubmitting ? 0.6 : 1 }}
+							disabled={isSubmitting || cart.length === 0}
+						>
+							{isSubmitting ? (
+								<>
+									<i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '8px' }} />
+									Submitting...
+								</>
+							) : (
+								<>
 							Proceed to Checkout <i className="fa-solid fa-arrow-right" style={{ marginLeft: '8px', fontSize: '12px' }} />
-						</Link>
+								</>
+							)}
+						</button>
+						{submitError && (
+							<div style={{
+								marginTop: '12px',
+								padding: '12px',
+								background: '#fee2e2',
+								border: '1px solid #fca5a5',
+								borderRadius: '8px',
+								color: '#dc2626',
+								fontSize: '14px',
+								display: 'flex',
+								alignItems: 'center',
+								gap: '8px'
+							}}>
+								<i className="fa-solid fa-circle-exclamation" />
+								<span>{submitError}</span>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>

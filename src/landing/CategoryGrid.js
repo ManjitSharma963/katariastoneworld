@@ -50,13 +50,14 @@ export default function CategoryGrid({ title, subtitle, items, showInfo = false,
 
 	const handleAddToCart = (e, item, idx) => {
 		e.stopPropagation(); // Prevent navigation when clicking add to cart button
-		const type = getProductType(item.title);
-		const price = item.price || getPrice(type, item.title);
+		const itemTitle = item.title || item.name || '';
+		const type = (item.productType || '').toLowerCase() || getProductType(itemTitle);
+		const price = item.price || getPrice(type, itemTitle);
 		const totalSqft = item.totalSqft || getStockSqft(type, idx);
 		addToCart({
 			id: item.id || `item-${idx}-${Date.now()}`,
-			title: item.title || `Product ${idx + 1}`,
-			img: item.img,
+			title: itemTitle || `Product ${idx + 1}`,
+			img: item.primaryImageUrl || item.img,
 			price: price,
 			sqftPerUnit: item.sqftPerUnit || 30, // Default 30 sqft per unit for stone slabs
 			totalSqft: totalSqft
@@ -80,13 +81,14 @@ export default function CategoryGrid({ title, subtitle, items, showInfo = false,
 							onClick={handleProductClick}
 							style={{ cursor: 'pointer' }}
 						>
-							<img src={it.img} alt={it.title} />
+							<img src={it.primaryImageUrl || it.img} alt={it.title || it.name} />
 							{showInfo ? (
 								<div className="category-info">
-									<h3 className="category-title">{it.title}</h3>
+									<h3 className="category-title">{it.title || it.name}</h3>
 									{enableCart && (() => {
-										const type = getProductType(it.title);
-										const price = it.price || getPrice(type, it.title);
+										const itemTitle = it.title || it.name || '';
+										const type = (it.productType || '').toLowerCase() || getProductType(itemTitle);
+										const price = it.price || getPrice(type, itemTitle);
 										const totalSqft = it.totalSqft || getStockSqft(type, idx);
 										return (
 											<>
@@ -116,10 +118,11 @@ export default function CategoryGrid({ title, subtitle, items, showInfo = false,
 								</div>
 							) : (
 								<>
-									{it.title && <h3>{it.title}</h3>}
+									{(it.title || it.name) && <h3>{it.title || it.name}</h3>}
 									{enableCart && (() => {
-										const type = getProductType(it.title);
-										const price = it.price || getPrice(type, it.title);
+										const itemTitle = it.title || it.name || '';
+										const type = (it.productType || '').toLowerCase() || getProductType(itemTitle);
+										const price = it.price || getPrice(type, itemTitle);
 										const totalSqft = it.totalSqft || getStockSqft(type, idx);
 										return (
 											<>

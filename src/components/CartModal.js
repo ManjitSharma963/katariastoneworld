@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { submitBilling, formatCartItemsForBilling } from '../services/billingApi';
 import '../landing.css';
 
 export default function CartModal({ isOpen, onClose }) {
 	const { cart, removeFromCart, updateSqft, increaseSqft, decreaseSqft, getCartCount, clearCart } = useCart();
+	const navigate = useNavigate();
 	const cartCount = getCartCount();
-	const [showBreakdown, setShowBreakdown] = useState(true);
 	const [taxRate, setTaxRate] = useState(() => {
 		const saved = localStorage.getItem('cartTaxRate');
 		return saved ? parseFloat(saved) : 5;
@@ -19,6 +20,36 @@ export default function CartModal({ isOpen, onClose }) {
 		const saved = localStorage.getItem('cartMobileNumber');
 		return saved || '';
 	});
+	const [customerName, setCustomerName] = useState(() => {
+		const saved = localStorage.getItem('cartCustomerName');
+		return saved || '';
+	});
+	const [addressLine1, setAddressLine1] = useState(() => {
+		const saved = localStorage.getItem('cartAddressLine1');
+		return saved || '';
+	});
+	const [city, setCity] = useState(() => {
+		const saved = localStorage.getItem('cartCity');
+		return saved || '';
+	});
+	const [state, setState] = useState(() => {
+		const saved = localStorage.getItem('cartState');
+		return saved || '';
+	});
+	const [pincode, setPincode] = useState(() => {
+		const saved = localStorage.getItem('cartPincode');
+		return saved || '';
+	});
+	const [gstin, setGstin] = useState(() => {
+		const saved = localStorage.getItem('cartGstin');
+		return saved || '';
+	});
+	const [email, setEmail] = useState(() => {
+		const saved = localStorage.getItem('cartEmail');
+		return saved || '';
+	});
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [submitError, setSubmitError] = useState('');
 
 	useEffect(() => {
 		if (isOpen) {
@@ -32,7 +63,8 @@ export default function CartModal({ isOpen, onClose }) {
 	}, [isOpen]);
 
 	useEffect(() => {
-		localStorage.setItem('cartTaxRate', taxRate.toString());
+		const taxRateToSave = taxRate === '' ? 0 : (typeof taxRate === 'number' ? taxRate : parseFloat(taxRate) || 0);
+		localStorage.setItem('cartTaxRate', taxRateToSave.toString());
 	}, [taxRate]);
 
 	useEffect(() => {
@@ -42,6 +74,34 @@ export default function CartModal({ isOpen, onClose }) {
 	useEffect(() => {
 		localStorage.setItem('cartMobileNumber', mobileNumber);
 	}, [mobileNumber]);
+
+	useEffect(() => {
+		localStorage.setItem('cartCustomerName', customerName);
+	}, [customerName]);
+
+	useEffect(() => {
+		localStorage.setItem('cartAddressLine1', addressLine1);
+	}, [addressLine1]);
+
+	useEffect(() => {
+		localStorage.setItem('cartCity', city);
+	}, [city]);
+
+	useEffect(() => {
+		localStorage.setItem('cartState', state);
+	}, [state]);
+
+	useEffect(() => {
+		localStorage.setItem('cartPincode', pincode);
+	}, [pincode]);
+
+	useEffect(() => {
+		localStorage.setItem('cartGstin', gstin);
+	}, [gstin]);
+
+	useEffect(() => {
+		localStorage.setItem('cartEmail', email);
+	}, [email]);
 
 	if (!isOpen) return null;
 
@@ -62,9 +122,15 @@ export default function CartModal({ isOpen, onClose }) {
 						<h2 className="cart-modal-title">
 							My Cart (0)
 						</h2>
-						<Link to="/" onClick={onClose} className="cart-modal-home">
+						<button 
+							onClick={() => {
+								onClose();
+								navigate('/');
+							}} 
+							className="cart-modal-home"
+						>
 							<i className="fa-solid fa-house" />
-						</Link>
+						</button>
 					</div>
 					<div className="cart-modal-content-new" style={{ justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
 						<div style={{ textAlign: 'center', padding: '40px 20px' }}>
@@ -85,14 +151,11 @@ export default function CartModal({ isOpen, onClose }) {
 		);
 	}
 
-	const totalSqft = cart.reduce((sum, item) => {
-		return sum + (item.sqftOrdered || 0);
-	}, 0);
-
 	const subtotal = cart.reduce((sum, item) => {
 		return sum + ((item.price || 0) * (item.sqftOrdered || 0));
 	}, 0);
-	const tax = (subtotal * taxRate) / 100;
+	const taxRateNum = taxRate === '' ? 0 : (typeof taxRate === 'number' ? taxRate : parseFloat(taxRate) || 0);
+	const tax = (subtotal * taxRateNum) / 100;
 	const total = Math.max(0, subtotal + tax - (discountAmount || 0));
 
 	return (
@@ -172,38 +235,50 @@ export default function CartModal({ isOpen, onClose }) {
 							<span className="summary-value-clean">₹ {subtotal.toLocaleString()}</span>
 						</div>
 						<div className="summary-row-clean editable-tax">
-							<span className="summary-label-clean">Tax ({taxRate}%):</span>
+							<span className="summary-label-clean">Tax ({taxRate === '' ? 0 : taxRate}%):</span>
 							<div className="tax-input-wrapper">
 								<input
 									type="number"
 									min="0"
 									max="100"
 									step="0.1"
-									value={taxRate}
+									value={taxRate === '' ? '' : taxRate}
 									onChange={(e) => {
 										const val = e.target.value;
+										// Allow empty string for typing
 										if (val === '' || val === null || val === undefined) {
-											setTaxRate(0);
+											setTaxRate('');
+											return;
+										}
+										// Parse the value and validate range
+										const parsed = parseFloat(val);
+										if (!isNaN(parsed)) {
+											const finalValue = Math.max(0, Math.min(100, parsed));
+											setTaxRate(finalValue);
 										} else {
-											const parsed = parseFloat(val);
-											if (!isNaN(parsed)) {
-												setTaxRate(Math.max(0, Math.min(100, parsed)));
-											} else {
-												setTaxRate(0);
-											}
+											// If not a valid number, allow empty string for deletion
+											setTaxRate('');
 										}
 									}}
 									onBlur={(e) => {
 										const val = e.target.value;
+										// If empty on blur, set to 0
 										if (val === '' || val === null || val === undefined) {
 											setTaxRate(0);
+											return;
+										}
+										// Remove leading zeros (e.g., 010 becomes 10, but keep 0 as 0)
+										let cleaned = val.replace(/^0+/, '');
+										// If all zeros were removed and result is empty, set to 0
+										if (cleaned === '') {
+											cleaned = '0';
+										}
+										const parsed = parseFloat(cleaned);
+										if (!isNaN(parsed)) {
+											const finalValue = Math.max(0, Math.min(100, parsed));
+											setTaxRate(finalValue);
 										} else {
-											const parsed = parseFloat(val);
-											if (!isNaN(parsed)) {
-												setTaxRate(Math.max(0, Math.min(100, parsed)));
-											} else {
-												setTaxRate(0);
-											}
+											setTaxRate(0);
 										}
 									}}
 									className="tax-input-clean"
@@ -229,7 +304,7 @@ export default function CartModal({ isOpen, onClose }) {
 							<span className="summary-label-clean">Mobile Number:</span>
 							<input
 								type="tel"
-								placeholder="Enter mobile"
+								placeholder="Enter mobile (10 digits)"
 								value={mobileNumber}
 								onChange={(e) => {
 									const value = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -237,22 +312,273 @@ export default function CartModal({ isOpen, onClose }) {
 								}}
 								className="service-input-clean"
 								style={{ width: '140px' }}
+								maxLength={10}
 							/>
-						</div>
-						<div className="summary-total-clean">
-							<span className="total-label-clean">Total</span>
-							<span className="total-value-clean">₹ {total.toFixed(2)}</span>
 						</div>
 					</div>
 
+					{/* Customer Information Section */}
+					<div style={{ 
+						background: '#f9fafb',
+						padding: '16px',
+						borderRadius: '12px',
+						marginTop: '16px',
+						border: '1px solid #e5e7eb',
+						width: '100%',
+						boxSizing: 'border-box'
+					}}>
+						<h3 style={{ 
+							fontSize: '14px', 
+							fontWeight: '700', 
+							marginBottom: '12px',
+							color: 'var(--accent)'
+						}}>
+							Customer Information
+						</h3>
+						<div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+							<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+								<label style={{ fontWeight: '600', fontSize: '13px' }}>Name: *</label>
+								<input
+									type="text"
+									placeholder="Enter name"
+									value={customerName}
+									onChange={(e) => setCustomerName(e.target.value.slice(0, 100))}
+									style={{
+										width: '100%',
+										padding: '6px 10px',
+										border: '1px solid #ddd',
+										borderRadius: '6px',
+										fontSize: '13px',
+										boxSizing: 'border-box'
+									}}
+								/>
+							</div>
+							<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+								<label style={{ fontWeight: '600', fontSize: '13px' }}>Email:</label>
+								<input
+									type="email"
+									placeholder="Enter email address"
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									style={{
+										width: '100%',
+										padding: '6px 10px',
+										border: '1px solid #ddd',
+										borderRadius: '6px',
+										fontSize: '13px',
+										boxSizing: 'border-box'
+									}}
+								/>
+							</div>
+							<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+								<label style={{ fontWeight: '600', fontSize: '13px' }}>Address: *</label>
+								<input
+									type="text"
+									placeholder="Enter address line 1"
+									value={addressLine1}
+									onChange={(e) => setAddressLine1(e.target.value)}
+									style={{
+										width: '100%',
+										padding: '6px 10px',
+										border: '1px solid #ddd',
+										borderRadius: '6px',
+										fontSize: '13px',
+										boxSizing: 'border-box'
+									}}
+								/>
+							</div>
+							<div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%' }}>
+								<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 150px', minWidth: '120px' }}>
+									<label style={{ fontWeight: '600', fontSize: '13px' }}>City: *</label>
+									<input
+										type="text"
+										placeholder="City"
+										value={city}
+										onChange={(e) => setCity(e.target.value)}
+										style={{
+											width: '100%',
+											padding: '6px 10px',
+											border: '1px solid #ddd',
+											borderRadius: '6px',
+											fontSize: '13px',
+											boxSizing: 'border-box'
+										}}
+									/>
+								</div>
+								<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 150px', minWidth: '120px' }}>
+									<label style={{ fontWeight: '600', fontSize: '13px' }}>State: *</label>
+									<input
+										type="text"
+										placeholder="State"
+										value={state}
+										onChange={(e) => setState(e.target.value)}
+										style={{
+											width: '100%',
+											padding: '6px 10px',
+											border: '1px solid #ddd',
+											borderRadius: '6px',
+											fontSize: '13px',
+											boxSizing: 'border-box'
+										}}
+									/>
+								</div>
+							</div>
+							<div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%' }}>
+								<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 150px', minWidth: '120px' }}>
+									<label style={{ fontWeight: '600', fontSize: '13px' }}>Pincode: *</label>
+									<input
+										type="text"
+										placeholder="Pincode"
+										value={pincode}
+										onChange={(e) => {
+											const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+											setPincode(value);
+										}}
+										style={{
+											width: '100%',
+											padding: '6px 10px',
+											border: '1px solid #ddd',
+											borderRadius: '6px',
+											fontSize: '13px',
+											boxSizing: 'border-box'
+										}}
+									/>
+								</div>
+								<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 150px', minWidth: '120px' }}>
+									<label style={{ fontWeight: '600', fontSize: '13px' }}>GSTIN:</label>
+									<input
+										type="text"
+										placeholder="GSTIN (optional)"
+										value={gstin}
+										onChange={(e) => setGstin(e.target.value.slice(0, 20))}
+										style={{
+											width: '100%',
+											padding: '6px 10px',
+											border: '1px solid #ddd',
+											borderRadius: '6px',
+											fontSize: '13px',
+											boxSizing: 'border-box'
+										}}
+									/>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div className="summary-total-clean" style={{ marginTop: '16px' }}>
+						<span className="total-label-clean">Total</span>
+						<span className="total-value-clean">₹ {total.toFixed(2)}</span>
+					</div>
+
 					{/* Checkout Button */}
-					<Link
-						to="/inquiry"
-						onClick={onClose}
+					<button
+						onClick={async () => {
+							// Validate required fields
+							if (!customerName || customerName.trim() === '') {
+								setSubmitError('Please enter customer name');
+								return;
+							}
+							if (!mobileNumber || mobileNumber.length !== 10) {
+								setSubmitError('Please enter a valid mobile number (exactly 10 digits)');
+								return;
+							}
+							if (!addressLine1 || addressLine1.trim() === '') {
+								setSubmitError('Please enter address line 1');
+								return;
+							}
+							if (!city || city.trim() === '') {
+								setSubmitError('Please enter city');
+								return;
+							}
+							if (!state || state.trim() === '') {
+								setSubmitError('Please enter state');
+								return;
+							}
+							if (!pincode || pincode.length !== 6) {
+								setSubmitError('Please enter a valid 6-digit pincode');
+								return;
+							}
+
+							setIsSubmitting(true);
+							setSubmitError('');
+
+							try {
+								const subtotal = cart.reduce((sum, item) => {
+									return sum + ((item.price || 0) * (item.sqftOrdered || 0));
+								}, 0);
+								const taxRateNum = taxRate === '' ? 0 : (typeof taxRate === 'number' ? taxRate : parseFloat(taxRate) || 0);
+								const tax = (subtotal * taxRateNum) / 100;
+								const total = Math.max(0, subtotal + tax - (discountAmount || 0));
+
+								// Format address
+								const address = `${addressLine1}, ${city}, ${state} - ${pincode}`;
+
+								const billingData = {
+									customerName: customerName.trim(),
+									customerMobileNumber: mobileNumber,
+									customerEmail: email.trim() || null,
+									address: address,
+									gstin: gstin.trim() || null,
+									items: formatCartItemsForBilling(cart),
+									taxPercentage: taxRateNum,
+									discountAmount: discountAmount || 0,
+									totalAmount: total
+								};
+
+								// Submit to billing API
+								await submitBilling(billingData);
+
+								// Success - clear all inputs and cart
+								setCustomerName('');
+								setMobileNumber('');
+								setEmail('');
+								setAddressLine1('');
+								setCity('');
+								setState('');
+								setPincode('');
+								setGstin('');
+								setTaxRate(5);
+								setDiscountAmount(0);
+								clearCart();
+								onClose();
+								alert('Order submitted successfully!');
+								navigate('/');
+							} catch (error) {
+								console.error('Billing API error:', error);
+								setSubmitError('Failed to submit order. Please try again.');
+								setIsSubmitting(false);
+							}
+						}}
 						className="cart-checkout-btn-clean"
+						disabled={isSubmitting || cart.length === 0}
+						style={{ opacity: isSubmitting ? 0.6 : 1 }}
 					>
-						Checkout
-					</Link>
+						{isSubmitting ? (
+							<>
+								<i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '8px' }} />
+								Submitting...
+							</>
+						) : (
+							'Checkout'
+						)}
+					</button>
+					{submitError && (
+						<div style={{
+							marginTop: '12px',
+							padding: '12px',
+							background: '#fee2e2',
+							border: '1px solid #fca5a5',
+							borderRadius: '8px',
+							color: '#dc2626',
+							fontSize: '14px',
+							display: 'flex',
+							alignItems: 'center',
+							gap: '8px'
+						}}>
+							<i className="fa-solid fa-circle-exclamation" />
+							<span>{submitError}</span>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

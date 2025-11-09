@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Filters from '../components/Filters';
 import Header from '../landing/Header';
 import { useCart } from '../context/CartContext';
-import { stoneProducts, categoriesRooms, categoriesTypes, countertopImages } from '../landing/data';
+import { categoriesRooms, categoriesTypes } from '../landing/data';
+import { fetchInventory } from '../services/inventoryApi';
 import './ProductList.css';
 
 // Helper function to determine product type from title
@@ -55,20 +56,23 @@ const getStockSqft = (type, idx) => {
 };
 
 // Combine all products into a unified list
-const getAllProducts = () => {
+const getAllProducts = (stoneProducts = []) => {
 	const allProducts = [];
 
-	// Add stone products
+	// Add stone products from API
 	stoneProducts.forEach((product, idx) => {
-		const type = getProductType(product.title);
+		const productName = product.name || product.title || '';
+		// API returns camelCase: productType, pricePerSqft, totalSqftStock, primaryImageUrl
+		const type = (product.productType || product.product_type || '').toLowerCase() || getProductType(productName);
 		allProducts.push({
-			id: `stone-${idx}`,
-			name: product.title,
+			id: product.id || `stone-${idx}`,
+			name: productName,
 			type: type,
-			color: getColor(product.title),
-			price: getPrice(type, product.title),
-			img: product.img,
-			totalSqft: getStockSqft(type, idx)
+			color: (product.color || '').toLowerCase() || getColor(productName),
+			price: product.pricePerSqft || product.price_per_sqft || getPrice(type, productName),
+			primaryImageUrl: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
+			img: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
+			totalSqft: product.totalSqftStock || product.total_sqft_stock || getStockSqft(type, idx)
 		});
 	});
 
@@ -99,41 +103,52 @@ const getAllProducts = () => {
 		});
 	});
 
-	// Add countertop images
-	countertopImages.forEach((img, idx) => {
-		allProducts.push({
-			id: `countertop-${idx}`,
-			name: `Premium Countertop ${idx + 1}`,
-			type: 'countertop',
-			color: 'multi',
-			price: 250,
-			img: img,
-			totalSqft: getStockSqft('countertop', idx + 30)
-		});
-	});
-
 	return allProducts;
 };
 
-const ALL_PRODUCTS = getAllProducts();
-
 export default function ProductList() {
 	const [filters, setFilters] = useState({ type: '', color: '' });
+	const [stoneProducts, setStoneProducts] = useState([]);
+	const [isLoading, setIsLoading] = useState(true);
 	const { addToCart } = useCart();
 
+	// Fetch stone products from API
+	useEffect(() => {
+		const loadStoneProducts = async () => {
+			try {
+				setIsLoading(true);
+				const inventory = await fetchInventory();
+				if (Array.isArray(inventory)) {
+					setStoneProducts(inventory);
+				}
+			} catch (error) {
+				console.error('Failed to load stone products from API:', error);
+				// Keep empty array on error
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		loadStoneProducts();
+	}, []);
+
+	const allProducts = useMemo(() => {
+		return getAllProducts(stoneProducts);
+	}, [stoneProducts]);
+
 	const products = useMemo(() => {
-		return ALL_PRODUCTS.filter((p) => {
+		return allProducts.filter((p) => {
 			if (filters.type && p.type !== filters.type) return false;
 			if (filters.color && !p.color.toLowerCase().includes(filters.color.toLowerCase())) return false;
 			return true;
 		});
-	}, [filters]);
+	}, [allProducts, filters]);
 
 	const handleAddToCart = (product) => {
 		addToCart({
 			id: product.id,
 			title: product.name,
-			img: product.img,
+			img: product.primaryImageUrl || product.img,
 			price: product.price,
 			type: product.type, // Product type for badge display
 			sqftPerUnit: 30, // Default sqft per unit for cart calculations
@@ -148,11 +163,19 @@ export default function ProductList() {
 				<div className="products-container">
 			<Filters filters={filters} onChange={setFilters} />
 
-				<div className="products-grid">
-				{products.map((p) => (
+				{isLoading ? (
+					<div className="no-products">
+						<div className="no-products-icon">
+							<i className="fa-solid fa-spinner fa-spin" />
+						</div>
+						<h3 className="no-products-title">Loading products...</h3>
+					</div>
+				) : (
+					<div className="products-grid">
+					{products.map((p) => (
 						<div key={p.id} className="product-card">
 							<div className="product-image-wrapper">
-								<img src={p.img} alt={p.name} className="product-image" />
+								<img src={p.primaryImageUrl || p.img} alt={p.name} className="product-image" />
 								<div className="product-badge">{p.type}</div>
 							</div>
 							<div className="product-content">
@@ -181,9 +204,10 @@ export default function ProductList() {
 							</div>
 						</div>
 					))}
-				</div>
+					</div>
+				)}
 
-				{products.length === 0 && (
+				{!isLoading && products.length === 0 && (
 					<div className="no-products">
 						<div className="no-products-icon">
 							<i className="fa-solid fa-inbox" />
