@@ -8,41 +8,18 @@ import LocateStore from '../landing/LocateStore';
 import ContactCTA from '../landing/ContactCTA';
 import Footer from '../landing/Footer';
 import {
-	categoriesRooms,
-	categoriesTypes,
 	materialImages
 } from '../landing/data';
 import SEO from '../components/SEO';
 import { fetchHeroes } from '../services/heroApi';
 import { fetchInventory } from '../services/inventoryApi';
-
-// Default hero slides as fallback
-const defaultHeroSlides = [
-	{
-		img: 'https://www.kajariaceramics.com/storage/banner/kajaria-living-desktop-2.webp',
-		title: 'Transform Your Space',
-		subtitle: 'Discover luxury tiles and stones for every corner of your home.'
-	},
-	{
-		img: 'https://www.kajariaceramics.com/storage/banner/kajaria-bathroom-desktop.webp',
-		title: 'Elegant Bathroom Designs',
-		subtitle: 'Redefine comfort with our exclusive tile collection.'
-	},
-	{
-		img: 'https://www.kajariaceramics.com/storage/banner/kajaria-kitchen-dektop.webp',
-		title: 'Stylish Kitchen Spaces',
-		subtitle: 'Premium quality tiles that blend beauty and durability.'
-	},
-	{
-		img: 'https://i.pinimg.com/736x/82/8b/ce/828bce282a9abc67efc28b0622ccdfcb.jpg',
-		title: 'HandCrafted Counter Top',
-		subtitle: 'Premium quality counter tops that blend beauty and durability.'
-	}
-];
+import { fetchCategories, fetchMaterialCategories } from '../services/categoriesApi';
 
 export default function Home() {
-	const [heroSlides, setHeroSlides] = useState(defaultHeroSlides);
+	const [heroSlides, setHeroSlides] = useState([]);
 	const [stoneProducts, setStoneProducts] = useState([]);
+	const [allCategories, setAllCategories] = useState([]);
+	const [materialCategories, setMaterialCategories] = useState([]);
 
 	useEffect(() => {
 		const loadHeroes = async () => {
@@ -59,10 +36,14 @@ export default function Home() {
 						subtitle: hero.subtitle || hero.description || ''
 					}));
 					setHeroSlides(mappedHeroes);
+				} else {
+					// If API returns empty array, set empty array
+					setHeroSlides([]);
 				}
 			} catch (error) {
-				console.error('Failed to load heroes from API, using default:', error);
-				// Keep default heroes on error
+				console.error('Failed to load heroes from API:', error);
+				// Keep empty array on error - no fallback to hardcoded data
+				setHeroSlides([]);
 			}
 		};
 
@@ -96,6 +77,44 @@ export default function Home() {
 		loadStoneProducts();
 	}, []);
 
+	useEffect(() => {
+		const loadCategories = async () => {
+			try {
+				// Fetch all categories from base endpoint for "Find Tiles by Category"
+				const categories = await fetchCategories();
+				if (Array.isArray(categories) && categories.length > 0) {
+					const mappedCategories = categories.map(cat => ({
+						title: cat.name || cat.title || '',
+						img: cat.imageUrl || cat.image_url || cat.img || cat.primaryImageUrl || ''
+					}));
+					setAllCategories(mappedCategories);
+				}
+			} catch (error) {
+				console.error('Failed to load categories from API:', error);
+				// Keep empty array on error
+				setAllCategories([]);
+			}
+
+			try {
+				// Fetch material categories for "Explore Our Collections"
+				const materials = await fetchMaterialCategories();
+				if (Array.isArray(materials) && materials.length > 0) {
+					const mappedMaterials = materials.map(cat => ({
+						title: cat.name || cat.title || '',
+						img: cat.imageUrl || cat.image_url || cat.img || cat.primaryImageUrl || ''
+					}));
+					setMaterialCategories(mappedMaterials);
+				}
+			} catch (error) {
+				console.error('Failed to load material categories from API:', error);
+				// Keep empty array on error
+				setMaterialCategories([]);
+			}
+		};
+
+		loadCategories();
+	}, []);
+
 	return (
 		<>
 			<SEO title="Premium Tiles & Stones in Gurgaon" keywords="tiles in Gurgaon, marble Gurgaon, granite Gurgaon, floor tiles, wall tiles, Kataria Stone World" />
@@ -104,13 +123,13 @@ export default function Home() {
 			<CategoryGrid
 				title="Find Tiles by Category"
 				subtitle="Kataria offers premium wall and floor tiles, combining advanced technology with elegant designs for lasting quality and easy maintenance."
-				items={categoriesRooms}
+				items={allCategories}
 			/>
-			<CategoryGrid
+			{/* <CategoryGrid
 				title="Explore Our Collections"
 				subtitle="Discover a wide range of premium tiles, elegant marbles, and durable granites — crafted to elevate every corner of your home and workspace."
-				items={categoriesTypes}
-			/>
+				items={materialCategories}
+			/> */}
 			<MaterialShowcase images={materialImages} />
 			<CategoryGrid
 				title="Premium Stone Collection"

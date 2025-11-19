@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { submitBilling, formatCartItemsForBilling } from '../services/billingApi';
+import LoginModal from './LoginModal';
 import '../landing.css';
 
 export default function CartModal({ isOpen, onClose }) {
@@ -50,6 +51,8 @@ export default function CartModal({ isOpen, onClose }) {
 	});
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [submitError, setSubmitError] = useState('');
+	const [showLoginModal, setShowLoginModal] = useState(false);
+	const [pendingBillingData, setPendingBillingData] = useState(null);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -499,55 +502,34 @@ export default function CartModal({ isOpen, onClose }) {
 								return;
 							}
 
-							setIsSubmitting(true);
 							setSubmitError('');
 
-							try {
-								const subtotal = cart.reduce((sum, item) => {
-									return sum + ((item.price || 0) * (item.sqftOrdered || 0));
-								}, 0);
-								const taxRateNum = taxRate === '' ? 0 : (typeof taxRate === 'number' ? taxRate : parseFloat(taxRate) || 0);
-								const tax = (subtotal * taxRateNum) / 100;
-								const total = Math.max(0, subtotal + tax - (discountAmount || 0));
+							// Calculate billing data
+							const subtotal = cart.reduce((sum, item) => {
+								return sum + ((item.price || 0) * (item.sqftOrdered || 0));
+							}, 0);
+							const taxRateNum = taxRate === '' ? 0 : (typeof taxRate === 'number' ? taxRate : parseFloat(taxRate) || 0);
+							const tax = (subtotal * taxRateNum) / 100;
+							const total = Math.max(0, subtotal + tax - (discountAmount || 0));
 
-								// Format address
-								const address = `${addressLine1}, ${city}, ${state} - ${pincode}`;
+							// Format address
+							const address = `${addressLine1}, ${city}, ${state} - ${pincode}`;
 
-								const billingData = {
-									customerName: customerName.trim(),
-									customerMobileNumber: mobileNumber,
-									customerEmail: email.trim() || null,
-									address: address,
-									gstin: gstin.trim() || null,
-									items: formatCartItemsForBilling(cart),
-									taxPercentage: taxRateNum,
-									discountAmount: discountAmount || 0,
-									totalAmount: total
-								};
+							const billingData = {
+								customerName: customerName.trim(),
+								customerMobileNumber: mobileNumber,
+								customerEmail: email.trim() || null,
+								address: address,
+								gstin: gstin.trim() || null,
+								items: formatCartItemsForBilling(cart),
+								taxPercentage: taxRateNum,
+								discountAmount: discountAmount || 0,
+								totalAmount: total
+							};
 
-								// Submit to billing API
-								await submitBilling(billingData);
-
-								// Success - clear all inputs and cart
-								setCustomerName('');
-								setMobileNumber('');
-								setEmail('');
-								setAddressLine1('');
-								setCity('');
-								setState('');
-								setPincode('');
-								setGstin('');
-								setTaxRate(5);
-								setDiscountAmount(0);
-								clearCart();
-								onClose();
-								alert('Order submitted successfully!');
-								navigate('/');
-							} catch (error) {
-								console.error('Billing API error:', error);
-								setSubmitError('Failed to submit order. Please try again.');
-								setIsSubmitting(false);
-							}
+							// Always show login modal before submitting billing
+							setPendingBillingData(billingData);
+							setShowLoginModal(true);
 						}}
 						className="cart-checkout-btn-clean"
 						disabled={isSubmitting || cart.length === 0}
@@ -581,6 +563,70 @@ export default function CartModal({ isOpen, onClose }) {
 					)}
 				</div>
 			</div>
+			<LoginModal
+				isOpen={showLoginModal}
+				onClose={() => {
+					setShowLoginModal(false);
+					setPendingBillingData(null);
+				}}
+				onSuccess={async (token) => {
+					// After successful login, proceed with billing submission
+					if (pendingBillingData) {
+						setIsSubmitting(true);
+						setSubmitError('');
+						setShowLoginModal(false);
+						
+						try {
+							console.log('Submitting billing data...', pendingBillingData);
+							
+							// Add timeout to prevent infinite loading
+							const timeoutPromise = new Promise((_, reject) => 
+								setTimeout(() => reject(new Error('Request timeout: Server took too long to respond')), 30000)
+							);
+							
+							// Submit to billing API with timeout
+							const billingPromise = submitBilling(pendingBillingData);
+							await Promise.race([billingPromise, timeoutPromise]);
+
+							console.log('Billing submitted successfully');
+							
+							// Success - clear all inputs and cart
+							setCustomerName('');
+							setMobileNumber('');
+							setEmail('');
+							setAddressLine1('');
+							setCity('');
+							setState('');
+							setPincode('');
+							setGstin('');
+							setTaxRate(5);
+							setDiscountAmount(0);
+							clearCart();
+							setPendingBillingData(null);
+							onClose();
+							alert('Order submitted successfully!');
+							// Stay on current page - don't navigate to home
+						} catch (error) {
+							console.error('Billing API error:', error);
+							setIsSubmitting(false);
+							
+							// Check if error is due to invalid token
+							if (error.message && (error.message.includes('401') || error.message.includes('Unauthorized') || error.message.includes('token'))) {
+								// Token invalid - remove it and show login again
+								localStorage.removeItem('access_token');
+								setShowLoginModal(true);
+								setSubmitError('Session expired. Please login again.');
+							} else if (error.message && error.message.includes('timeout')) {
+								setSubmitError('Request timeout: Server took too long to respond. Please check your connection and try again.');
+							} else if (error.message && error.message.includes('Failed to fetch')) {
+								setSubmitError('Network error: Unable to connect to server. Please check your internet connection.');
+							} else {
+								setSubmitError(error.message || 'Failed to submit order. Please try again.');
+							}
+						}
+					}
+				}}
+			/>
 		</div>
 	);
 }

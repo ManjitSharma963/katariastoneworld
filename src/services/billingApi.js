@@ -13,13 +13,32 @@ const API_BASE_URL = 'http://localhost:8080/api';
  */
 export const submitBilling = async (billingData) => {
 	try {
+		// Get access token from localStorage
+		const accessToken = localStorage.getItem('access_token');
+		
+		console.log('📤 [Billing API] Submitting billing data...');
+		console.log('📤 [Billing API] Endpoint:', `${API_BASE_URL}/bills`);
+		console.log('📤 [Billing API] Has token:', !!accessToken);
+		
+		// Prepare headers
+		const headers = {
+			'Content-Type': 'application/json',
+		};
+		
+		// Add Authorization header if token exists
+		if (accessToken) {
+			headers['Authorization'] = `Bearer ${accessToken}`;
+		}
+
+		console.log('📤 [Billing API] Request body:', JSON.stringify(billingData, null, 2));
+
 		const response = await fetch(`${API_BASE_URL}/bills`, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
+			headers: headers,
 			body: JSON.stringify(billingData),
 		});
+
+		console.log('📥 [Billing API] Response status:', response.status, response.statusText);
 
 		if (!response.ok) {
 			// Check if response is JSON or HTML
@@ -49,6 +68,7 @@ export const submitBilling = async (billingData) => {
 		}
 
 		const data = await response.json();
+		console.log('✅ [Billing API] Success! Response:', data);
 		return data;
 	} catch (error) {
 		console.error('Error submitting billing:', error);

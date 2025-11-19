@@ -5,6 +5,8 @@ import Header from '../landing/Header';
 import Footer from '../landing/Footer';
 import SEO from '../components/SEO';
 import { submitBilling, formatCartItemsForBilling } from '../services/billingApi';
+import { getAccessToken } from '../services/authApi';
+import LoginModal from '../components/LoginModal';
 
 export default function Cart() {
 	const { cart, removeFromCart, updateSqft, increaseSqft, decreaseSqft, getCartCount, clearCart } = useCart();
@@ -52,6 +54,8 @@ export default function Cart() {
 	});
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [submitError, setSubmitError] = useState('');
+	const [showLoginModal, setShowLoginModal] = useState(false);
+	const [pendingBillingData, setPendingBillingData] = useState(null);
 
 	useEffect(() => {
 		localStorage.setItem('cartTaxRate', taxRate.toString());
@@ -585,31 +589,44 @@ export default function Cart() {
 									return;
 								}
 
-								setIsSubmitting(true);
 								setSubmitError('');
 
+								// Calculate billing data
+								const subtotal = cart.reduce((sum, item) => {
+									return sum + ((item.price || 0) * (item.sqftOrdered || 0));
+								}, 0);
+								const tax = (subtotal * taxRate) / 100;
+								const total = Math.max(0, subtotal + tax - (discountAmount || 0));
+
+								// Format address
+								const address = `${addressLine1}, ${city}, ${state} - ${pincode}`;
+
+								const billingData = {
+									customerName: customerName.trim(),
+									customerMobileNumber: mobileNumber,
+									customerEmail: email.trim() || null,
+									address: address,
+									gstin: gstin.trim() || null,
+									items: formatCartItemsForBilling(cart),
+									taxPercentage: taxRate,
+									discountAmount: discountAmount || 0,
+									totalAmount: total
+								};
+
+								// Check for access token
+								const accessToken = getAccessToken();
+								
+								if (!accessToken) {
+									// No token - show login modal and save billing data
+									setPendingBillingData(billingData);
+									setShowLoginModal(true);
+									return;
+								}
+
+								// Token exists - proceed with billing
+								setIsSubmitting(true);
+
 								try {
-									const subtotal = cart.reduce((sum, item) => {
-										return sum + ((item.price || 0) * (item.sqftOrdered || 0));
-									}, 0);
-									const tax = (subtotal * taxRate) / 100;
-									const total = Math.max(0, subtotal + tax - (discountAmount || 0));
-
-									// Format address
-									const address = `${addressLine1}, ${city}, ${state} - ${pincode}`;
-
-									const billingData = {
-										customerName: customerName.trim(),
-										customerMobileNumber: mobileNumber,
-										customerEmail: email.trim() || null,
-										address: address,
-										gstin: gstin.trim() || null,
-										items: formatCartItemsForBilling(cart),
-										taxPercentage: taxRate,
-										discountAmount: discountAmount || 0,
-										totalAmount: total
-									};
-
 									// Submit to billing API
 									await submitBilling(billingData);
 
@@ -629,7 +646,16 @@ export default function Cart() {
 									navigate('/');
 								} catch (error) {
 									console.error('Billing API error:', error);
-									setSubmitError('Failed to submit order. Please try again.');
+									// Check if error is due to invalid token
+									if (error.message && (error.message.includes('401') || error.message.includes('Unauthorized') || error.message.includes('token'))) {
+										// Token invalid - remove it and show login
+										localStorage.removeItem('access_token');
+										setPendingBillingData(billingData);
+										setShowLoginModal(true);
+										setSubmitError('Session expired. Please login again.');
+									} else {
+										setSubmitError('Failed to submit order. Please try again.');
+									}
 									setIsSubmitting(false);
 								}
 							}}
@@ -669,6 +695,42 @@ export default function Cart() {
 				</div>
 			</div>
 			<Footer />
+			<LoginModal
+				isOpen={showLoginModal}
+				onClose={() => {
+					setShowLoginModal(false);
+					setPendingBillingData(null);
+				}}
+				onSuccess={async (token) => {
+					// After successful login, proceed with billing
+					if (pendingBillingData) {
+						setIsSubmitting(true);
+						setSubmitError('');
+						try {
+							await submitBilling(pendingBillingData);
+							
+							// Success - clear all inputs and cart
+							setCustomerName('');
+							setMobileNumber('');
+							setEmail('');
+							setAddressLine1('');
+							setCity('');
+							setState('');
+							setPincode('');
+							setGstin('');
+							setTaxRate(5);
+							setDiscountAmount(0);
+							clearCart();
+							alert('Order submitted successfully!');
+							navigate('/');
+						} catch (error) {
+							console.error('Billing API error:', error);
+							setSubmitError('Failed to submit order. Please try again.');
+							setIsSubmitting(false);
+						}
+					}
+				}}
+			/>
 		</>
 	);
 }

@@ -2,7 +2,6 @@ import React, { useMemo, useState, useEffect } from 'react';
 import Filters from '../components/Filters';
 import Header from '../landing/Header';
 import { useCart } from '../context/CartContext';
-import { categoriesRooms, categoriesTypes } from '../landing/data';
 import { fetchInventory } from '../services/inventoryApi';
 import './ProductList.css';
 
@@ -16,7 +15,7 @@ const getProductType = (title) => {
 	return 'tiles'; // default
 };
 
-// Helper function to determine color from title
+// Helper function to determine color from title (fallback if API doesn't provide)
 const getColor = (title) => {
 	const titleLower = title.toLowerCase();
 	if (titleLower.includes('black')) return 'black';
@@ -32,78 +31,24 @@ const getColor = (title) => {
 	return 'multi'; // default
 };
 
-// Helper function to estimate price based on type
-const getPrice = (type, title) => {
-	const titleLower = title.toLowerCase();
-	if (type === 'marble') return titleLower.includes('carrara') || titleLower.includes('calacatta') ? 200 : 150;
-	if (type === 'granite') return titleLower.includes('black') || titleLower.includes('white galaxy') ? 180 : 140;
-	if (type === 'countertop') return 250;
-	return 60; // tiles default
-};
-
-// Helper function to generate random stock sq ft
-const getStockSqft = (type, idx) => {
-	// Generate varied stock amounts based on product type
-	const baseStock = {
-		marble: [150, 200, 180, 220, 175, 190, 210],
-		granite: [120, 160, 140, 180, 135, 170, 155],
-		tiles: [500, 600, 550, 650, 580, 620, 590],
-		countertop: [80, 100, 90, 110, 95, 105, 85]
-	};
-	
-	const stocks = baseStock[type] || [200, 250, 230, 270, 240, 260, 220];
-	return stocks[idx % stocks.length];
-};
-
-// Combine all products into a unified list
-const getAllProducts = (stoneProducts = []) => {
-	const allProducts = [];
-
-	// Add stone products from API
-	stoneProducts.forEach((product, idx) => {
+// Map API products to unified format - only use data from API
+const mapProductsFromAPI = (stoneProducts = []) => {
+	return stoneProducts.map((product, idx) => {
 		const productName = product.name || product.title || '';
 		// API returns camelCase: productType, pricePerSqft, totalSqftStock, primaryImageUrl
 		const type = (product.productType || product.product_type || '').toLowerCase() || getProductType(productName);
-		allProducts.push({
-			id: product.id || `stone-${idx}`,
+		
+		return {
+			id: product.id || `product-${idx}`,
 			name: productName,
 			type: type,
 			color: (product.color || '').toLowerCase() || getColor(productName),
-			price: product.pricePerSqft || product.price_per_sqft || getPrice(type, productName),
+			price: product.pricePerSqft || product.price_per_sqft || 0,
 			primaryImageUrl: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
 			img: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
-			totalSqft: product.totalSqftStock || product.total_sqft_stock || getStockSqft(type, idx)
-		});
+			totalSqft: product.totalSqftStock || product.total_sqft_stock || 0
+		};
 	});
-
-	// Add room categories
-	categoriesRooms.forEach((product, idx) => {
-		allProducts.push({
-			id: `room-${idx}`,
-			name: product.title,
-			type: 'tiles',
-			color: 'multi',
-			price: 55,
-			img: product.img,
-			totalSqft: getStockSqft('tiles', idx + 10)
-		});
-	});
-
-	// Add type categories
-	categoriesTypes.forEach((product, idx) => {
-		const type = getProductType(product.title);
-		allProducts.push({
-			id: `type-${idx}`,
-			name: product.title,
-			type: type,
-			color: 'multi',
-			price: getPrice(type, product.title),
-			img: product.img,
-			totalSqft: getStockSqft(type, idx + 20)
-		});
-	});
-
-	return allProducts;
 };
 
 export default function ProductList() {
@@ -112,28 +57,32 @@ export default function ProductList() {
 	const [isLoading, setIsLoading] = useState(true);
 	const { addToCart } = useCart();
 
-	// Fetch stone products from API
+	// Fetch products from API only
 	useEffect(() => {
-		const loadStoneProducts = async () => {
+		const loadProducts = async () => {
 			try {
 				setIsLoading(true);
 				const inventory = await fetchInventory();
 				if (Array.isArray(inventory)) {
 					setStoneProducts(inventory);
+				} else {
+					setStoneProducts([]);
 				}
 			} catch (error) {
-				console.error('Failed to load stone products from API:', error);
-				// Keep empty array on error
+				console.error('Failed to load products from API:', error);
+				// Keep empty array on error - no hardcoded fallback
+				setStoneProducts([]);
 			} finally {
 				setIsLoading(false);
 			}
 		};
 
-		loadStoneProducts();
+		loadProducts();
 	}, []);
 
+	// Map API products to unified format
 	const allProducts = useMemo(() => {
-		return getAllProducts(stoneProducts);
+		return mapProductsFromAPI(stoneProducts);
 	}, [stoneProducts]);
 
 	const products = useMemo(() => {
