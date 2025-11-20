@@ -35,18 +35,20 @@ const getColor = (title) => {
 const mapProductsFromAPI = (stoneProducts = []) => {
 	return stoneProducts.map((product, idx) => {
 		const productName = product.name || product.title || '';
-		// API returns camelCase: productType, pricePerSqft, totalSqftStock, primaryImageUrl
+		// API returns: productType, pricePerUnit, quantity, unit, primaryImageUrl
 		const type = (product.productType || product.product_type || '').toLowerCase() || getProductType(productName);
+		const unit = product.unit || 'sqft'; // Default to sqft if not provided
 		
 		return {
 			id: product.id || `product-${idx}`,
 			name: productName,
 			type: type,
 			color: (product.color || '').toLowerCase() || getColor(productName),
-			price: product.pricePerSqft || product.price_per_sqft || 0,
+			price: product.pricePerUnit || product.pricePerSqft || product.price_per_sqft || 0,
 			primaryImageUrl: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
 			img: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
-			totalSqft: product.totalSqftStock || product.total_sqft_stock || 0
+			totalSqft: product.quantity || product.totalSqftStock || product.total_sqft_stock || 0,
+			unit: unit // Store unit for display
 		};
 	});
 };
@@ -87,7 +89,16 @@ export default function ProductList() {
 
 	const products = useMemo(() => {
 		return allProducts.filter((p) => {
-			if (filters.type && p.type !== filters.type) return false;
+			// Category/Type filter - flexible matching
+			if (filters.type) {
+				const productType = (p.type || '').toLowerCase().replace(/\s+/g, '-');
+				const filterType = filters.type.toLowerCase();
+				// Match exact or if product type contains filter type
+				if (productType !== filterType && !productType.includes(filterType) && !filterType.includes(productType)) {
+					return false;
+				}
+			}
+			// Color filter
 			if (filters.color && !p.color.toLowerCase().includes(filters.color.toLowerCase())) return false;
 			return true;
 		});
@@ -135,12 +146,12 @@ export default function ProductList() {
 								</div>
 								<div className="product-price">
 									₹{p.price}
-									<span className="price-unit">/ sq ft</span>
+									<span className="price-unit">/ {p.unit || 'sqft'}</span>
 								</div>
 								{p.totalSqft && (
 									<div className="product-sqft">
 										<i className="fa-solid fa-warehouse" />
-										{p.totalSqft} sq ft in stock
+										{p.totalSqft} {p.unit || 'sqft'} in stock
 									</div>
 								)}
 								<button 

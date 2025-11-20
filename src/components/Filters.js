@@ -1,16 +1,49 @@
-import React from 'react';
-
-const PRODUCT_TYPES = [
-	{ value: '', label: 'All Types', icon: 'fa-grid-2' },
-	{ value: 'marble', label: 'Marble', icon: 'fa-gem' },
-	{ value: 'granite', label: 'Granite', icon: 'fa-mountain' },
-	{ value: 'tiles', label: 'Tiles', icon: 'fa-square' },
-	{ value: 'countertop', label: 'Counter Top', icon: 'fa-table' }
-];
+import React, { useState, useEffect } from 'react';
+import { fetchCategories } from '../services/categoriesApi';
 
 const COMMON_COLORS = ['white', 'black', 'beige', 'brown', 'blue', 'gray', 'gold', 'green'];
 
+// Icon mapping for common categories
+const getCategoryIcon = (categoryName) => {
+	const name = categoryName.toLowerCase();
+	if (name.includes('marble')) return 'fa-gem';
+	if (name.includes('granite')) return 'fa-mountain';
+	if (name.includes('tile')) return 'fa-square';
+	if (name.includes('counter') || name.includes('table')) return 'fa-table';
+	if (name.includes('chair')) return 'fa-chair';
+	return 'fa-box';
+};
+
 export default function Filters({ filters, onChange }) {
+	const [categories, setCategories] = useState([]);
+	const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+
+	// Fetch categories from API
+	useEffect(() => {
+		const loadCategories = async () => {
+			try {
+				setIsLoadingCategories(true);
+				const allCategories = await fetchCategories();
+				if (Array.isArray(allCategories) && allCategories.length > 0) {
+					// Map categories to filter format
+					const mappedCategories = allCategories.map(cat => ({
+						value: (cat.name || '').toLowerCase().replace(/\s+/g, '-'),
+						label: cat.name || '',
+						icon: getCategoryIcon(cat.name || '')
+					}));
+					setCategories(mappedCategories);
+				}
+			} catch (error) {
+				console.error('Failed to load categories for filters:', error);
+				// Keep empty array on error
+				setCategories([]);
+			} finally {
+				setIsLoadingCategories(false);
+			}
+		};
+
+		loadCategories();
+	}, []);
 	const update = (key, value) => {
 		onChange({ ...filters, [key]: value });
 	};
@@ -55,27 +88,47 @@ export default function Filters({ filters, onChange }) {
 			</div>
 
 			<div className="filters-content-creative">
-				{/* Product Type - Chip Style */}
+				{/* Product Type - Chip Style - Dynamic from API */}
 				<div className="filter-section-wrapper">
 					<div className="filter-section-label">
 						<i className="fa-solid fa-layer-group" />
-						<span>Product Type</span>
+						<span>Category</span>
 					</div>
-					<div className="filter-chips-container">
-						{PRODUCT_TYPES.map((type) => (
+					{isLoadingCategories ? (
+						<div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+							<i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '8px' }} />
+							Loading categories...
+						</div>
+					) : (
+						<div className="filter-chips-container">
+							{/* All Types option */}
 							<button
-								key={type.value}
-								className={`filter-chip ${filters.type === type.value ? 'active' : ''}`}
-								onClick={() => update('type', type.value)}
+								key="all"
+								className={`filter-chip ${filters.type === '' ? 'active' : ''}`}
+								onClick={() => update('type', '')}
 							>
-								<i className={`fa-solid ${type.icon}`} />
-								<span>{type.label}</span>
-								{filters.type === type.value && (
+								<i className="fa-solid fa-grid-2" />
+								<span>All Categories</span>
+								{filters.type === '' && (
 									<i className="fa-solid fa-check check-icon" />
 								)}
 							</button>
-						))}
-					</div>
+							{/* Dynamic categories from API */}
+							{categories.map((category) => (
+								<button
+									key={category.value}
+									className={`filter-chip ${filters.type === category.value ? 'active' : ''}`}
+									onClick={() => update('type', category.value)}
+								>
+									<i className={`fa-solid ${category.icon}`} />
+									<span>{category.label}</span>
+									{filters.type === category.value && (
+										<i className="fa-solid fa-check check-icon" />
+									)}
+								</button>
+							))}
+						</div>
+					)}
 				</div>
 
 				{/* Color Filter - Visual Picker */}

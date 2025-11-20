@@ -12,7 +12,7 @@ curl -X GET http://localhost:8080/api/categories \
   -H "Content-Type: application/json"
 ```
 
-### 2. Get Categories by Type (Room or Material)
+### 2. Get Categories by Type (Any Category Type)
 ```bash
 # Get room categories only
 curl -X GET "http://localhost:8080/api/categories?category_type=room" \
@@ -20,6 +20,14 @@ curl -X GET "http://localhost:8080/api/categories?category_type=room" \
 
 # Get material categories only
 curl -X GET "http://localhost:8080/api/categories?category_type=material" \
+  -H "Content-Type: application/json"
+
+# Get furniture categories (table, chair, etc.)
+curl -X GET "http://localhost:8080/api/categories?category_type=furniture" \
+  -H "Content-Type: application/json"
+
+# Get any custom category type
+curl -X GET "http://localhost:8080/api/categories?category_type=your_category_type" \
   -H "Content-Type: application/json"
 ```
 
@@ -114,7 +122,7 @@ CREATE TABLE IF NOT EXISTS categories (
 | `id` | INT | Primary key, auto-increment | Yes |
 | `name` | VARCHAR(100) | Category name (e.g., "Bathroom", "Tiles") | Yes |
 | `image_url` | VARCHAR(500) | Category image URL | Yes |
-| `category_type` | ENUM('room', 'material') | Type: 'room' or 'material' | Yes |
+| `category_type` | VARCHAR(50) or ENUM | Type: 'room', 'material', 'furniture', or any custom type | Yes |
 | `description` | TEXT | Optional description | No |
 | `display_order` | INT | Order for display (lower = first) | No (default: 0) |
 | `is_active` | BOOLEAN | Whether category is active | No (default: TRUE) |

@@ -56,15 +56,16 @@ export default function Home() {
 				const inventory = await fetchInventory();
 				if (Array.isArray(inventory)) {
 					// Map API response to match expected format for CategoryGrid
-					// API returns camelCase: productType, pricePerSqft, totalSqftStock, primaryImageUrl
+					// API returns: productType, pricePerUnit, quantity, unit, primaryImageUrl
 					const mappedProducts = inventory.map(product => ({
 						title: product.name || product.title || '',
 						img: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
 						sqftPerUnit: product.sqftPerUnit || product.sqft_per_unit || 30,
-						price: product.pricePerSqft || product.price_per_sqft || 0,
-						totalSqft: product.totalSqftStock || product.total_sqft_stock || 0,
+						price: product.pricePerUnit || product.pricePerSqft || product.price_per_sqft || 0,
+						totalSqft: product.quantity || product.totalSqftStock || product.total_sqft_stock || 0,
 						productType: product.productType || product.product_type || '',
-						color: product.color || ''
+						color: product.color || '',
+						unit: product.unit || 'sqft'
 					}));
 					setStoneProducts(mappedProducts);
 				}

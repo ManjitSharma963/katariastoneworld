@@ -3,7 +3,7 @@ const API_BASE_URL = 'http://localhost:8080/api';
 
 /**
  * Fetch all categories from the API
- * @param {string} categoryType - Optional: Filter by 'room' or 'material'
+ * @param {string} categoryType - Optional: Filter by category type (e.g., 'room', 'material', 'furniture', etc.)
  * @returns {Promise<Array>} Array of categories
  */
 export const fetchCategories = async (categoryType = null) => {
