@@ -148,12 +148,7 @@ export default function ProductList() {
 									₹{p.price}
 									<span className="price-unit">/ {p.unit || 'sqft'}</span>
 								</div>
-								{p.totalSqft && (
-									<div className="product-sqft">
-										<i className="fa-solid fa-warehouse" />
-										{p.totalSqft} {p.unit || 'sqft'} in stock
-									</div>
-								)}
+								
 								<button 
 									className="product-enquire-btn"
 									onClick={() => handleAddToCart(p)}

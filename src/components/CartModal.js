@@ -231,318 +231,45 @@ export default function CartModal({ isOpen, onClose }) {
 						))}
 					</div>
 
-					{/* Summary Section */}
-					<div className="cart-summary-clean">
-						<div className="summary-row-clean">
-							<span className="summary-label-clean">Subtotal</span>
-							<span className="summary-value-clean">₹ {subtotal.toLocaleString()}</span>
-						</div>
-						<div className="summary-row-clean editable-tax">
-							<span className="summary-label-clean">Tax ({taxRate === '' ? 0 : taxRate}%):</span>
-							<div className="tax-input-wrapper">
-								<input
-									type="number"
-									min="0"
-									max="100"
-									step="0.1"
-									value={taxRate === '' ? '' : taxRate}
-									onChange={(e) => {
-										const val = e.target.value;
-										// Allow empty string for typing
-										if (val === '' || val === null || val === undefined) {
-											setTaxRate('');
-											return;
-										}
-										// Parse the value and validate range
-										const parsed = parseFloat(val);
-										if (!isNaN(parsed)) {
-											const finalValue = Math.max(0, Math.min(100, parsed));
-											setTaxRate(finalValue);
-										} else {
-											// If not a valid number, allow empty string for deletion
-											setTaxRate('');
-										}
-									}}
-									onBlur={(e) => {
-										const val = e.target.value;
-										// If empty on blur, set to 0
-										if (val === '' || val === null || val === undefined) {
-											setTaxRate(0);
-											return;
-										}
-										// Remove leading zeros (e.g., 010 becomes 10, but keep 0 as 0)
-										let cleaned = val.replace(/^0+/, '');
-										// If all zeros were removed and result is empty, set to 0
-										if (cleaned === '') {
-											cleaned = '0';
-										}
-										const parsed = parseFloat(cleaned);
-										if (!isNaN(parsed)) {
-											const finalValue = Math.max(0, Math.min(100, parsed));
-											setTaxRate(finalValue);
-										} else {
-											setTaxRate(0);
-										}
-									}}
-									className="tax-input-clean"
-								/>
-								<span className="summary-value-clean tax-amount">₹ {tax.toFixed(2)}</span>
-							</div>
-						</div>
-						<div className="summary-row-clean editable-service">
-							<span className="summary-label-clean">Discount Amount:</span>
-							<div className="service-input-wrapper">
-								<input
-									type="number"
-									min="0"
-									step="1"
-									value={discountAmount}
-									onChange={(e) => setDiscountAmount(Math.max(0, parseFloat(e.target.value) || 0))}
-									className="service-input-clean"
-								/>
-								<span className="summary-value-clean service-amount" style={{ color: '#10b981' }}>- ₹ {(discountAmount || 0).toLocaleString()}</span>
-							</div>
-						</div>
-						<div className="summary-row-clean editable-service">
-							<span className="summary-label-clean">Mobile Number:</span>
-							<input
-								type="tel"
-								placeholder="Enter mobile (10 digits)"
-								value={mobileNumber}
-								onChange={(e) => {
-									const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-									setMobileNumber(value);
-								}}
-								className="service-input-clean"
-								style={{ width: '140px' }}
-								maxLength={10}
-							/>
-						</div>
-					</div>
-
-					{/* Customer Information Section */}
-					<div style={{ 
-						background: '#f9fafb',
-						padding: '16px',
-						borderRadius: '12px',
-						marginTop: '16px',
-						border: '1px solid #e5e7eb',
-						width: '100%',
-						boxSizing: 'border-box'
-					}}>
-						<h3 style={{ 
-							fontSize: '14px', 
-							fontWeight: '700', 
-							marginBottom: '12px',
-							color: 'var(--accent)'
-						}}>
-							Customer Information
-						</h3>
-						<div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
-							<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-								<label style={{ fontWeight: '600', fontSize: '13px' }}>Name: *</label>
-								<input
-									type="text"
-									placeholder="Enter name"
-									value={customerName}
-									onChange={(e) => setCustomerName(e.target.value.slice(0, 100))}
-									style={{
-										width: '100%',
-										padding: '6px 10px',
-										border: '1px solid #ddd',
-										borderRadius: '6px',
-										fontSize: '13px',
-										boxSizing: 'border-box'
-									}}
-								/>
-							</div>
-							<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-								<label style={{ fontWeight: '600', fontSize: '13px' }}>Email:</label>
-								<input
-									type="email"
-									placeholder="Enter email address"
-									value={email}
-									onChange={(e) => setEmail(e.target.value)}
-									style={{
-										width: '100%',
-										padding: '6px 10px',
-										border: '1px solid #ddd',
-										borderRadius: '6px',
-										fontSize: '13px',
-										boxSizing: 'border-box'
-									}}
-								/>
-							</div>
-							<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-								<label style={{ fontWeight: '600', fontSize: '13px' }}>Address: *</label>
-								<input
-									type="text"
-									placeholder="Enter address line 1"
-									value={addressLine1}
-									onChange={(e) => setAddressLine1(e.target.value)}
-									style={{
-										width: '100%',
-										padding: '6px 10px',
-										border: '1px solid #ddd',
-										borderRadius: '6px',
-										fontSize: '13px',
-										boxSizing: 'border-box'
-									}}
-								/>
-							</div>
-							<div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%' }}>
-								<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 150px', minWidth: '120px' }}>
-									<label style={{ fontWeight: '600', fontSize: '13px' }}>City: *</label>
-									<input
-										type="text"
-										placeholder="City"
-										value={city}
-										onChange={(e) => setCity(e.target.value)}
-										style={{
-											width: '100%',
-											padding: '6px 10px',
-											border: '1px solid #ddd',
-											borderRadius: '6px',
-											fontSize: '13px',
-											boxSizing: 'border-box'
-										}}
-									/>
-								</div>
-								<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 150px', minWidth: '120px' }}>
-									<label style={{ fontWeight: '600', fontSize: '13px' }}>State: *</label>
-									<input
-										type="text"
-										placeholder="State"
-										value={state}
-										onChange={(e) => setState(e.target.value)}
-										style={{
-											width: '100%',
-											padding: '6px 10px',
-											border: '1px solid #ddd',
-											borderRadius: '6px',
-											fontSize: '13px',
-											boxSizing: 'border-box'
-										}}
-									/>
-								</div>
-							</div>
-							<div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: '100%' }}>
-								<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 150px', minWidth: '120px' }}>
-									<label style={{ fontWeight: '600', fontSize: '13px' }}>Pincode: *</label>
-									<input
-										type="text"
-										placeholder="Pincode"
-										value={pincode}
-										onChange={(e) => {
-											const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-											setPincode(value);
-										}}
-										style={{
-											width: '100%',
-											padding: '6px 10px',
-											border: '1px solid #ddd',
-											borderRadius: '6px',
-											fontSize: '13px',
-											boxSizing: 'border-box'
-										}}
-									/>
-								</div>
-								<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 150px', minWidth: '120px' }}>
-									<label style={{ fontWeight: '600', fontSize: '13px' }}>GSTIN:</label>
-									<input
-										type="text"
-										placeholder="GSTIN (optional)"
-										value={gstin}
-										onChange={(e) => setGstin(e.target.value.slice(0, 20))}
-										style={{
-											width: '100%',
-											padding: '6px 10px',
-											border: '1px solid #ddd',
-											borderRadius: '6px',
-											fontSize: '13px',
-											boxSizing: 'border-box'
-										}}
-									/>
-								</div>
-							</div>
-						</div>
-					</div>
-
 					<div className="summary-total-clean" style={{ marginTop: '16px' }}>
 						<span className="total-label-clean">Total</span>
 						<span className="total-value-clean">₹ {total.toFixed(2)}</span>
 					</div>
 
-					{/* Checkout Button */}
+					{/* Submit for Enquiry Button */}
 					<button
-						onClick={async () => {
-							// Validate required fields
-							if (!customerName || customerName.trim() === '') {
-								setSubmitError('Please enter customer name');
-								return;
-							}
-							if (!mobileNumber || mobileNumber.length !== 10) {
-								setSubmitError('Please enter a valid mobile number (exactly 10 digits)');
-								return;
-							}
-							if (!addressLine1 || addressLine1.trim() === '') {
-								setSubmitError('Please enter address line 1');
-								return;
-							}
-							if (!city || city.trim() === '') {
-								setSubmitError('Please enter city');
-								return;
-							}
-							if (!state || state.trim() === '') {
-								setSubmitError('Please enter state');
-								return;
-							}
-							if (!pincode || pincode.length !== 6) {
-								setSubmitError('Please enter a valid 6-digit pincode');
-								return;
-							}
-
-							setSubmitError('');
-
-							// Calculate billing data
+						onClick={() => {
+							// Calculate totals
 							const subtotal = cart.reduce((sum, item) => {
 								return sum + ((item.price || 0) * (item.sqftOrdered || 0));
 							}, 0);
-							const taxRateNum = taxRate === '' ? 0 : (typeof taxRate === 'number' ? taxRate : parseFloat(taxRate) || 0);
-							const tax = (subtotal * taxRateNum) / 100;
-							const total = Math.max(0, subtotal + tax - (discountAmount || 0));
+							const totalSqft = cart.reduce((sum, item) => {
+								return sum + (item.sqftOrdered || 0);
+							}, 0);
 
-							// Format address
-							const address = `${addressLine1}, ${city}, ${state} - ${pincode}`;
+							// Format WhatsApp message
+							let message = '📦 PRODUCT SUMMARY\n\n';
+							
+							cart.forEach((item) => {
+								const sqft = item.sqftOrdered || 0;
+								const itemTotal = (item.price || 0) * sqft;
+								message += `${item.title} - ${sqft.toLocaleString()} sq ft - ₹${itemTotal.toLocaleString()}\n`;
+							});
 
-							const billingData = {
-								customerName: customerName.trim(),
-								customerMobileNumber: mobileNumber,
-								customerEmail: email.trim() || null,
-								address: address,
-								gstin: gstin.trim() || null,
-								items: formatCartItemsForBilling(cart),
-								taxPercentage: taxRateNum,
-								discountAmount: discountAmount || 0,
-								totalAmount: total
-							};
+							message += `\nTOTAL - ${totalSqft.toLocaleString()} sq ft - ₹${subtotal.toLocaleString()}`;
 
-							// Always show login modal before submitting billing
-							setPendingBillingData(billingData);
-							setShowLoginModal(true);
+							// Encode message for URL
+							const encodedMessage = encodeURIComponent(message);
+							const whatsappNumber = '919996965755';
+							const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+
+							// Navigate to WhatsApp directly
+							window.location.href = whatsappUrl;
 						}}
 						className="cart-checkout-btn-clean"
-						disabled={isSubmitting || cart.length === 0}
-						style={{ opacity: isSubmitting ? 0.6 : 1 }}
+						disabled={cart.length === 0}
 					>
-						{isSubmitting ? (
-							<>
-								<i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '8px' }} />
-								Submitting...
-							</>
-						) : (
-							'Checkout'
-						)}
+						Submit for Enquiry
 					</button>
 					{submitError && (
 						<div style={{

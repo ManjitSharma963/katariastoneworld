@@ -281,243 +281,6 @@ export default function Cart() {
 									borderRadius: '12px',
 									border: '1px solid #e5e7eb'
 								}}>
-									<div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-										<span style={{ fontWeight: '600' }}>Sub Total:</span>
-										<span style={{ fontWeight: '700' }}>₹ {subtotal.toLocaleString()}</span>
-									</div>
-									<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-										<span style={{ fontWeight: '600' }}>Tax (%):</span>
-										<div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-											<input
-												type="number"
-												min="0"
-												max="100"
-												step="0.1"
-												value={taxRate}
-												onChange={(e) => {
-													const val = e.target.value;
-													if (val === '' || val === null || val === undefined) {
-														setTaxRate(0);
-													} else {
-														// ParseFloat automatically handles leading zeros (010 becomes 10)
-														const parsed = parseFloat(val);
-														if (!isNaN(parsed)) {
-															setTaxRate(Math.max(0, Math.min(100, parsed)));
-														} else {
-															setTaxRate(0);
-														}
-													}
-												}}
-												onBlur={(e) => {
-													const val = e.target.value;
-													if (val === '' || val === null || val === undefined) {
-														setTaxRate(0);
-													} else {
-														const parsed = parseFloat(val);
-														if (!isNaN(parsed)) {
-															setTaxRate(Math.max(0, Math.min(100, parsed)));
-														} else {
-															setTaxRate(0);
-														}
-													}
-												}}
-												style={{
-													width: '70px',
-													padding: '6px 10px',
-													border: '1px solid #ddd',
-													borderRadius: '6px',
-													textAlign: 'center',
-													fontSize: '14px',
-													fontWeight: '600'
-												}}
-											/>
-											<span style={{ fontWeight: '700', minWidth: '80px', textAlign: 'right' }}>₹ {tax.toFixed(2)}</span>
-										</div>
-									</div>
-									<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-										<span style={{ fontWeight: '600' }}>Discount Amount:</span>
-										<div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-											<input
-												type="number"
-												min="0"
-												step="1"
-												value={discountAmount}
-												onChange={(e) => setDiscountAmount(Math.max(0, parseFloat(e.target.value) || 0))}
-												style={{
-													width: '100px',
-													padding: '6px 10px',
-													border: '1px solid #ddd',
-													borderRadius: '6px',
-													textAlign: 'center',
-													fontSize: '14px',
-													fontWeight: '600'
-												}}
-											/>
-											<span style={{ fontWeight: '700', minWidth: '80px', textAlign: 'right', color: '#10b981' }}>- ₹ {(discountAmount || 0).toLocaleString()}</span>
-										</div>
-									</div>
-									<div style={{ 
-										paddingTop: '16px', 
-										borderTop: '1px solid #e5e7eb', 
-										marginTop: '12px' 
-									}}>
-										<h3 style={{ 
-											fontSize: '16px', 
-											fontWeight: '700', 
-											marginBottom: '16px',
-											color: 'var(--accent)'
-										}}>
-											Customer Information
-										</h3>
-										<div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-											<div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-												<label style={{ fontWeight: '600', fontSize: '14px' }}>Name: *</label>
-												<input
-													type="text"
-													placeholder="Enter customer name"
-													value={customerName}
-													onChange={(e) => setCustomerName(e.target.value.slice(0, 100))}
-													style={{
-														width: '100%',
-														padding: '8px 12px',
-														border: '1px solid #ddd',
-														borderRadius: '6px',
-														fontSize: '14px',
-														boxSizing: 'border-box'
-													}}
-												/>
-											</div>
-											<div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-												<label style={{ fontWeight: '600', fontSize: '14px' }}>Mobile Number: *</label>
-												<input
-													type="tel"
-													placeholder="Enter mobile number"
-													value={mobileNumber}
-													onChange={(e) => {
-														const value = e.target.value.replace(/\D/g, '').slice(0, 15);
-														setMobileNumber(value);
-													}}
-													style={{
-														width: '100%',
-														padding: '8px 12px',
-														border: '1px solid #ddd',
-														borderRadius: '6px',
-														fontSize: '14px',
-														boxSizing: 'border-box'
-													}}
-												/>
-											</div>
-											<div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-												<label style={{ fontWeight: '600', fontSize: '14px' }}>Email:</label>
-												<input
-													type="email"
-													placeholder="Enter email address"
-													value={email}
-													onChange={(e) => setEmail(e.target.value)}
-													style={{
-														width: '100%',
-														padding: '8px 12px',
-														border: '1px solid #ddd',
-														borderRadius: '6px',
-														fontSize: '14px',
-														boxSizing: 'border-box'
-													}}
-												/>
-											</div>
-											<div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-												<label style={{ fontWeight: '600', fontSize: '14px' }}>Address Line 1: *</label>
-												<input
-													type="text"
-													placeholder="Enter address line 1"
-													value={addressLine1}
-													onChange={(e) => setAddressLine1(e.target.value)}
-													style={{
-														width: '100%',
-														padding: '8px 12px',
-														border: '1px solid #ddd',
-														borderRadius: '6px',
-														fontSize: '14px',
-														boxSizing: 'border-box'
-													}}
-												/>
-											</div>
-											<div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-												<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 200px', minWidth: '150px' }}>
-													<label style={{ fontWeight: '600', fontSize: '14px' }}>City: *</label>
-													<input
-														type="text"
-														placeholder="Enter city"
-														value={city}
-														onChange={(e) => setCity(e.target.value)}
-														style={{
-															width: '100%',
-															padding: '8px 12px',
-															border: '1px solid #ddd',
-															borderRadius: '6px',
-															fontSize: '14px',
-															boxSizing: 'border-box'
-														}}
-													/>
-												</div>
-												<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 200px', minWidth: '150px' }}>
-													<label style={{ fontWeight: '600', fontSize: '14px' }}>State: *</label>
-													<input
-														type="text"
-														placeholder="Enter state"
-														value={state}
-														onChange={(e) => setState(e.target.value)}
-														style={{
-															width: '100%',
-															padding: '8px 12px',
-															border: '1px solid #ddd',
-															borderRadius: '6px',
-															fontSize: '14px',
-															boxSizing: 'border-box'
-														}}
-													/>
-												</div>
-											</div>
-											<div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-												<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 200px', minWidth: '150px' }}>
-													<label style={{ fontWeight: '600', fontSize: '14px' }}>Pincode: *</label>
-													<input
-														type="text"
-														placeholder="Enter pincode"
-														value={pincode}
-														onChange={(e) => {
-															const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-															setPincode(value);
-														}}
-														style={{
-															width: '100%',
-															padding: '8px 12px',
-															border: '1px solid #ddd',
-															borderRadius: '6px',
-															fontSize: '14px',
-															boxSizing: 'border-box'
-														}}
-													/>
-												</div>
-												<div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 200px', minWidth: '150px' }}>
-													<label style={{ fontWeight: '600', fontSize: '14px' }}>GSTIN:</label>
-													<input
-														type="text"
-														placeholder="Enter GSTIN (optional)"
-														value={gstin}
-														onChange={(e) => setGstin(e.target.value.slice(0, 20))}
-														style={{
-															width: '100%',
-															padding: '8px 12px',
-															border: '1px solid #ddd',
-															borderRadius: '6px',
-															fontSize: '14px',
-															boxSizing: 'border-box'
-														}}
-													/>
-												</div>
-											</div>
-										</div>
-									</div>
 									<div style={{ 
 										display: 'flex', 
 										justifyContent: 'space-between', 
@@ -562,117 +325,39 @@ export default function Cart() {
 							Clear Cart
 						</button>
 						<button
-							onClick={async () => {
-								// Validate required fields
-								if (!customerName || customerName.trim() === '') {
-									setSubmitError('Please enter customer name');
-									return;
-								}
-								if (!mobileNumber || mobileNumber.length < 10) {
-									setSubmitError('Please enter a valid mobile number (minimum 10 digits)');
-									return;
-								}
-								if (!addressLine1 || addressLine1.trim() === '') {
-									setSubmitError('Please enter address line 1');
-									return;
-								}
-								if (!city || city.trim() === '') {
-									setSubmitError('Please enter city');
-									return;
-								}
-								if (!state || state.trim() === '') {
-									setSubmitError('Please enter state');
-									return;
-								}
-								if (!pincode || pincode.length !== 6) {
-									setSubmitError('Please enter a valid 6-digit pincode');
-									return;
-								}
-
-								setSubmitError('');
-
-								// Calculate billing data
+							onClick={() => {
+								// Calculate totals
 								const subtotal = cart.reduce((sum, item) => {
 									return sum + ((item.price || 0) * (item.sqftOrdered || 0));
 								}, 0);
-								const tax = (subtotal * taxRate) / 100;
-								const total = Math.max(0, subtotal + tax - (discountAmount || 0));
+								const totalSqft = cart.reduce((sum, item) => {
+									return sum + (item.sqftOrdered || 0);
+								}, 0);
 
-								// Format address
-								const address = `${addressLine1}, ${city}, ${state} - ${pincode}`;
-
-								const billingData = {
-									customerName: customerName.trim(),
-									customerMobileNumber: mobileNumber,
-									customerEmail: email.trim() || null,
-									address: address,
-									gstin: gstin.trim() || null,
-									items: formatCartItemsForBilling(cart),
-									taxPercentage: taxRate,
-									discountAmount: discountAmount || 0,
-									totalAmount: total
-								};
-
-								// Check for access token
-								const accessToken = getAccessToken();
+								// Format WhatsApp message
+								let message = '📦 PRODUCT SUMMARY\n\n';
 								
-								if (!accessToken) {
-									// No token - show login modal and save billing data
-									setPendingBillingData(billingData);
-									setShowLoginModal(true);
-									return;
-								}
+								cart.forEach((item) => {
+									const sqft = item.sqftOrdered || 0;
+									const itemTotal = (item.price || 0) * sqft;
+									message += `${item.title} - ${sqft.toLocaleString()} sq ft - ₹${itemTotal.toLocaleString()}\n`;
+								});
 
-								// Token exists - proceed with billing
-								setIsSubmitting(true);
+								message += `\nTOTAL - ${totalSqft.toLocaleString()} sq ft - ₹${subtotal.toLocaleString()}`;
 
-								try {
-									// Submit to billing API
-									await submitBilling(billingData);
+								// Encode message for URL
+								const encodedMessage = encodeURIComponent(message);
+								const whatsappNumber = '919996965755';
+								const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
 
-									// Success - clear all inputs and cart
-									setCustomerName('');
-									setMobileNumber('');
-									setEmail('');
-									setAddressLine1('');
-									setCity('');
-									setState('');
-									setPincode('');
-									setGstin('');
-									setTaxRate(5);
-									setDiscountAmount(0);
-									clearCart();
-									alert('Order submitted successfully!');
-									navigate('/');
-								} catch (error) {
-									console.error('Billing API error:', error);
-									// Check if error is due to invalid token
-									if (error.message && (error.message.includes('401') || error.message.includes('Unauthorized') || error.message.includes('token'))) {
-										// Token invalid - remove it and show login
-										localStorage.removeItem('access_token');
-										setPendingBillingData(billingData);
-										setShowLoginModal(true);
-										setSubmitError('Session expired. Please login again.');
-									} else {
-										setSubmitError('Failed to submit order. Please try again.');
-									}
-									setIsSubmitting(false);
-								}
+								// Navigate to WhatsApp directly
+								window.location.href = whatsappUrl;
 							}}
 							className="cta"
-							style={{ cursor: 'pointer', opacity: isSubmitting ? 0.6 : 1 }}
-							disabled={isSubmitting || cart.length === 0}
+							style={{ cursor: 'pointer' }}
+							disabled={cart.length === 0}
 						>
-							{isSubmitting ? (
-								<>
-									<i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '8px' }} />
-									Submitting...
-								</>
-							) : (
-								<>
-							Proceed to Checkout <i className="fa-solid fa-arrow-right" style={{ marginLeft: '8px', fontSize: '12px' }} />
-								</>
-							)}
+							Submit for Enquiry <i className="fa-solid fa-arrow-right" style={{ marginLeft: '8px', fontSize: '12px' }} />
 						</button>
 						{submitError && (
 							<div style={{
