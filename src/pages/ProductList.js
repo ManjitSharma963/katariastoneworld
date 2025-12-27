@@ -39,12 +39,16 @@ const mapProductsFromAPI = (stoneProducts = []) => {
 		const type = (product.productType || product.product_type || '').toLowerCase() || getProductType(productName);
 		const unit = product.unit || 'sqft'; // Default to sqft if not provided
 		
+		// Get price with priority: pricePerSqftAfter > price_per_sqft_after > pricePerSqft > price_per_sqft > pricePerUnit
+		const pricePerSqftAfter = product.pricePerSqftAfter || product.price_per_sqft_after || product.pricePerSqft || product.price_per_sqft || product.pricePerUnit || 0;
+		
 		return {
 			id: product.id || `product-${idx}`,
 			name: productName,
 			type: type,
 			color: (product.color || '').toLowerCase() || getColor(productName),
-			price: product.pricePerUnit || product.pricePerSqft || product.price_per_sqft || 0,
+			price: pricePerSqftAfter,
+			pricePerSqftAfter: pricePerSqftAfter, // Store for display
 			primaryImageUrl: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
 			img: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
 			totalSqft: product.quantity || product.totalSqftStock || product.total_sqft_stock || 0,
@@ -109,7 +113,7 @@ export default function ProductList() {
 			id: product.id,
 			title: product.name,
 			img: product.primaryImageUrl || product.img,
-			price: product.price,
+			price: product.pricePerSqftAfter,
 			type: product.type, // Product type for badge display
 			sqftPerUnit: 30, // Default sqft per unit for cart calculations
 			totalSqft: product.totalSqft // Total stock available
@@ -145,7 +149,7 @@ export default function ProductList() {
 									<span style={{ textTransform: 'capitalize' }}>{p.color}</span>
 								</div>
 								<div className="product-price">
-									₹{p.price}
+									₹{p.pricePerSqftAfter}
 									<span className="price-unit">/ {p.unit || 'sqft'}</span>
 								</div>
 								

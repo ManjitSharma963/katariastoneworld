@@ -40,6 +40,31 @@ const getStockSqft = (type, idx) => {
 	return stocks[idx % stocks.length];
 };
 
+// Helper function to format unit label for display
+const formatUnitLabel = (unit) => {
+	if (!unit) return 'sq ft';
+	const unitLower = unit.toLowerCase();
+	
+	// Map common unit values to display labels
+	const unitMap = {
+		'piece': 'piece',
+		'pieces': 'piece',
+		'sqft': 'sq ft',
+		'sq ft': 'sq ft',
+		'square feet': 'sq ft',
+		'square foot': 'sq ft',
+		'meter': 'meter',
+		'meters': 'meter',
+		'm': 'meter',
+		'sqm': 'sq meter',
+		'sq meter': 'sq meter',
+		'square meter': 'sq meter',
+		'square meters': 'sq meter'
+	};
+	
+	return unitMap[unitLower] || unit;
+};
+
 export default function CategoryGrid({ title, subtitle, items, showInfo = false, enableCart = false, showSeeMore = false, limitRows = false }) {
 	const { addToCart } = useCart();
 	const navigate = useNavigate();
@@ -52,7 +77,7 @@ export default function CategoryGrid({ title, subtitle, items, showInfo = false,
 		e.stopPropagation(); // Prevent navigation when clicking add to cart button
 		const itemTitle = item.title || item.name || '';
 		const type = (item.productType || '').toLowerCase() || getProductType(itemTitle);
-		const price = item.price || getPrice(type, itemTitle);
+		const price = item.pricePerSqftAfter || item.price_per_sqft_after || item.price || getPrice(type, itemTitle);
 		const totalSqft = item.totalSqft || getStockSqft(type, idx);
 		addToCart({
 			id: item.id || `item-${idx}-${Date.now()}`,
@@ -88,14 +113,16 @@ export default function CategoryGrid({ title, subtitle, items, showInfo = false,
 									{enableCart && (() => {
 										const itemTitle = it.title || it.name || '';
 										const type = (it.productType || '').toLowerCase() || getProductType(itemTitle);
-										const price = it.price || getPrice(type, itemTitle);
+										const price = it.pricePerSqftAfter || it.price_per_sqft_after || it.price || getPrice(type, itemTitle);
 										const totalSqft = it.totalSqft || getStockSqft(type, idx);
+										const unit = it.unit || 'sqft';
+										const unitLabel = formatUnitLabel(unit);
 										return (
 											<>
 												<div style={{ fontSize: '14px', color: '#333', fontWeight: '600', marginTop: '8px', marginBottom: '4px' }}>
-													₹{price} <span style={{ fontSize: '12px', color: '#666', fontWeight: '400' }}>/ sq ft</span>
+													₹{price} <span style={{ fontSize: '12px', color: '#666', fontWeight: '400' }}>/ {unitLabel}</span>
 												</div>
-												<p style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: '600', marginBottom: '4px' }}>
+												{/* <p style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: '600', marginBottom: '4px' }}>
 													<i className="fa-solid fa-warehouse" style={{ marginRight: '4px', fontSize: '11px' }} />
 													{totalSqft} sq ft in stock
 												</p>
@@ -104,7 +131,7 @@ export default function CategoryGrid({ title, subtitle, items, showInfo = false,
 														<i className="fa-solid fa-ruler-combined" style={{ marginRight: '4px', fontSize: '11px' }} />
 														{it.sqftPerUnit} sq ft per unit
 													</p>
-												)}
+												)} */}
 												<button
 													className="add-to-cart-btn"
 													onClick={(e) => handleAddToCart(e, it, idx)}
@@ -122,12 +149,14 @@ export default function CategoryGrid({ title, subtitle, items, showInfo = false,
 									{enableCart && (() => {
 										const itemTitle = it.title || it.name || '';
 										const type = (it.productType || '').toLowerCase() || getProductType(itemTitle);
-										const price = it.price || getPrice(type, itemTitle);
+										const price = it.pricePerSqftAfter || it.price_per_sqft_after || it.price || getPrice(type, itemTitle);
 										const totalSqft = it.totalSqft || getStockSqft(type, idx);
+										const unit = it.unit || 'sqft';
+										const unitLabel = formatUnitLabel(unit);
 										return (
 											<>
 												<div style={{ fontSize: '14px', color: '#333', fontWeight: '600', marginTop: '8px', marginBottom: '4px' }}>
-													₹{price} <span style={{ fontSize: '12px', color: '#666', fontWeight: '400' }}>/ sq ft</span>
+													₹{price} <span style={{ fontSize: '12px', color: '#666', fontWeight: '400' }}>/ {unitLabel}</span>
 												</div>
 												<p style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: '600', marginBottom: '8px' }}>
 													<i className="fa-solid fa-warehouse" style={{ marginRight: '4px', fontSize: '11px' }} />

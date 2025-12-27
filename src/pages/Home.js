@@ -54,6 +54,9 @@ export default function Home() {
 		const loadStoneProducts = async () => {
 			try {
 				const inventory = await fetchInventory();
+				console.log('📦 [Home] Raw inventory data:', inventory);
+				console.log('📦 [Home] Inventory array length:', Array.isArray(inventory) ? inventory.length : 'Not an array');
+				
 				if (Array.isArray(inventory)) {
 					// Map API response to match expected format for CategoryGrid
 					// API returns: productType, pricePerUnit, quantity, unit, primaryImageUrl
@@ -61,17 +64,26 @@ export default function Home() {
 						title: product.name || product.title || '',
 						img: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
 						sqftPerUnit: product.sqftPerUnit || product.sqft_per_unit || 30,
-						price: product.pricePerUnit || product.pricePerSqft || product.price_per_sqft || 0,
+						price: product.pricePerSqftAfter || product.price_per_sqft_after || product.pricePerSqft || product.price_per_sqft || product.pricePerUnit || 0,
+						pricePerSqftAfter: product.pricePerSqftAfter || product.price_per_sqft_after || product.pricePerSqft || product.price_per_sqft || product.pricePerUnit || 0,
 						totalSqft: product.quantity || product.totalSqftStock || product.total_sqft_stock || 0,
 						productType: product.productType || product.product_type || '',
 						color: product.color || '',
 						unit: product.unit || 'sqft'
 					}));
+					console.log('📦 [Home] Mapped products:', mappedProducts);
+					console.log('📦 [Home] Total products count:', mappedProducts.length);
+					console.log('📦 [Home] First section (0-4):', mappedProducts.slice(0, 4).length, 'items');
+					console.log('📦 [Home] Second section (4-8):', mappedProducts.slice(4, 8).length, 'items');
 					setStoneProducts(mappedProducts);
+				} else {
+					console.warn('⚠️ [Home] Inventory is not an array:', inventory);
+					setStoneProducts([]);
 				}
 			} catch (error) {
-				console.error('Failed to load stone products from API:', error);
+				console.error('❌ [Home] Failed to load stone products from API:', error);
 				// Keep empty array on error
+				setStoneProducts([]);
 			}
 		};
 
@@ -141,15 +153,17 @@ export default function Home() {
 				showSeeMore
 				limitRows
 			/>
-			<CategoryGrid
-				title="Explore Our Complete Collection"
-				subtitle="Discover our full range of premium stones and tiles — expertly crafted to bring elegance, durability, and sophistication to your home, kitchen, or office spaces."
-				items={stoneProducts.slice(4, 8)}
-				showInfo
-				enableCart
-				showSeeMore
-				limitRows
-			/>
+			{stoneProducts.length > 4 && (
+				<CategoryGrid
+					title="Explore Our Complete Collection"
+					subtitle="Discover our full range of premium stones and tiles — expertly crafted to bring elegance, durability, and sophistication to your home, kitchen, or office spaces."
+					items={stoneProducts.slice(4, 8)}
+					showInfo
+					enableCart
+					showSeeMore
+					limitRows
+				/>
+			)}
 			<LocateStore />
 			<ContactCTA />
 			<Footer />
