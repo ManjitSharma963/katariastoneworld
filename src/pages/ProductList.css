@@ -503,6 +503,21 @@
 	box-shadow: 0 4px 12px rgba(2, 32, 91, 0.2);
 }
 
+.product-color-badge {
+	position: absolute;
+	top: 12px;
+	left: 12px;
+	background: linear-gradient(135deg, var(--accent), var(--accent-2));
+	color: #fff;
+	padding: 6px 12px;
+	border-radius: 20px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: capitalize;
+	letter-spacing: 0.5px;
+	box-shadow: 0 4px 12px rgba(2, 32, 91, 0.2);
+}
+
 .product-content {
 	padding: 20px;
 	flex: 1;

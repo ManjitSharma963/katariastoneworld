@@ -141,17 +141,13 @@ export default function ProductList() {
 							<div className="product-image-wrapper">
 								<img src={p.primaryImageUrl || p.img} alt={p.name} className="product-image" />
 								<div className="product-badge">{p.type}</div>
+								<div className="product-color-badge">{p.color}</div>
 							</div>
 							<div className="product-content">
 								<h3 className="product-name">{p.name}</h3>
-								<div className="product-meta">
+								{/*<div className="product-meta">
 									<span style={{ textTransform: 'capitalize' }}>{p.type}</span>
-									<span style={{ textTransform: 'capitalize' }}>{p.color}</span>
-								</div>
-								<div className="product-price">
-									₹{p.pricePerSqftAfter}
-									<span className="price-unit">/ {p.unit || 'sqft'}</span>
-								</div>
+								</div>*/}
 								
 								<button 
 									className="product-enquire-btn"
