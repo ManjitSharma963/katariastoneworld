@@ -98,7 +98,7 @@ export default function InquiryForm() {
 			const encodedMessage = encodeURIComponent(whatsappMessage);
 			const whatsappNumber = '918107707064'; // Replace with your WhatsApp business number
 			const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-			
+			// hello world
 			// Open WhatsApp in new tab
 			window.open(whatsappUrl, '_blank');
 			
