@@ -1,5 +1,5 @@
 // Use full endpoint URL with fallback
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://www.katariastoneworld.com/api';
+const API_BASE_URL = 'https://www.katariastoneworld.com/api';
 
 /**
  * Fetch all inventory/stone products from the API

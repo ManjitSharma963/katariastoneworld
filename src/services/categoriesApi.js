@@ -1,5 +1,5 @@
 // Use full endpoint URL with fallback
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://www.katariastoneworld.com/api';
+const API_BASE_URL = 'https://www.katariastoneworld.com/api';
 
 /**
  * Fetch all categories from the API
@@ -40,7 +40,7 @@ export const fetchCategories = async (categoryType = null) => {
 				if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
 					console.error('❌ /api/categories returned HTML instead of JSON');
 					console.error('Received HTML error page - backend may not be running');
-					throw new Error('Backend server issue: Request to /api/categories returned HTML. Check if backend is running on http://localhost:8080');
+					throw new Error('Backend server issue: Request to /api/categories returned HTML. Check if backend is running on https://www.katariastoneworld.com');
 				}
 				throw new Error(`API error (status: ${response.status})`);
 			}
