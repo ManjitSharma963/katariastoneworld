@@ -1,5 +1,5 @@
 // Use full endpoint URL with fallback
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://www.katariastoneworld.com/api';
 
 /**
  * Fetch all inventory/stone products from the API
@@ -33,7 +33,7 @@ export const fetchInventory = async () => {
 				if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
 					console.error('❌ /api/inventory returned HTML instead of JSON');
 					console.error('Received HTML error page - backend may not be running');
-					throw new Error('Backend server issue: Request to /api/inventory returned HTML. Check if backend is running on http://localhost:8080');
+					throw new Error('Backend server issue: Request to /api/inventory returned HTML. Check if backend is running on https://www.katariastoneworld.com');
 				}
 				throw new Error(`API error (status: ${response.status})`);
 			}
@@ -46,7 +46,7 @@ export const fetchInventory = async () => {
 				console.error('❌ /api/inventory returned HTML instead of JSON');
 				console.error('Received HTML instead of JSON - backend may not be running');
 				console.error('Response preview:', text.substring(0, 300));
-				throw new Error('Backend server issue: Request to /api/inventory returned HTML. Check if backend is running on http://localhost:8080');
+				throw new Error('Backend server issue: Request to /api/inventory returned HTML. Check if backend is running on https://www.katariastoneworld.com');
 			}
 			throw new Error(`API returned non-JSON response (Content-Type: ${contentType})`);
 		}
