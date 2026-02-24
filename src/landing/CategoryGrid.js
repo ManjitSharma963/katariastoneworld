@@ -119,9 +119,6 @@ export default function CategoryGrid({ title, subtitle, items, showInfo = false,
 										const unitLabel = formatUnitLabel(unit);
 										return (
 											<>
-												<div style={{ fontSize: '14px', color: '#333', fontWeight: '600', marginTop: '8px', marginBottom: '4px' }}>
-													₹{price} <span style={{ fontSize: '12px', color: '#666', fontWeight: '400' }}>/ {unitLabel}</span>
-												</div>
 												{/* <p style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: '600', marginBottom: '4px' }}>
 													<i className="fa-solid fa-warehouse" style={{ marginRight: '4px', fontSize: '11px' }} />
 													{totalSqft} sq ft in stock
@@ -155,9 +152,6 @@ export default function CategoryGrid({ title, subtitle, items, showInfo = false,
 										const unitLabel = formatUnitLabel(unit);
 										return (
 											<>
-												<div style={{ fontSize: '14px', color: '#333', fontWeight: '600', marginTop: '8px', marginBottom: '4px' }}>
-													₹{price} <span style={{ fontSize: '12px', color: '#666', fontWeight: '400' }}>/ {unitLabel}</span>
-												</div>
 												<p style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: '600', marginBottom: '8px' }}>
 													<i className="fa-solid fa-warehouse" style={{ marginRight: '4px', fontSize: '11px' }} />
 													{totalSqft} sq ft in stock

@@ -12,18 +12,12 @@ export default function ShippingEstimator() {
 	const [city, setCity] = useState('Gurgaon');
 	const [weightKg, setWeightKg] = useState('');
 
-	const pricePerKmPerTon = 22; // ₹ per km per 1000 kg (illustrative)
-	const fixedLoading = 450; // ₹ fixed
-
 	const selectedCity = useMemo(
 		() => CITIES.find((c) => c.name === city) || CITIES[0],
 		[city]
 	);
 
 	const km = selectedCity.baseKm;
-	const tons = Math.max(0, (parseFloat(weightKg) || 0) / 1000);
-	const variableCost = km * pricePerKmPerTon * tons;
-	const total = fixedLoading + variableCost;
 
 	return (
 		<div style={{ maxWidth: 480, margin: '0 auto' }}>
@@ -48,7 +42,6 @@ export default function ShippingEstimator() {
 			</label>
 			<div style={{ marginTop: 12 }}>
 				<p>Distance: <strong>{km}</strong> km</p>
-				<p>Estimated shipping: <strong>₹ {total.toFixed(2)}</strong></p>
 				<p style={{ fontSize: 12, color: '#666' }}>Indicative only. Final transport rate varies by carrier, quantity, and access.</p>
 			</div>
 		</div>

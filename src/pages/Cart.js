@@ -152,11 +152,6 @@ export default function Cart() {
 							<div style={{ flex: 1 }}>
 								<h3 style={{ color: 'var(--accent)', marginBottom: '8px' }}>{item.title}</h3>
 								<div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
-									{item.price > 0 && (
-										<p style={{ color: 'var(--muted)', fontSize: '14px' }}>
-											₹ {item.price.toLocaleString()} per unit
-										</p>
-									)}
 									{item.totalSqft && (
 										<p style={{ color: '#10b981', fontSize: '14px', fontWeight: '600' }}>
 											<i className="fa-solid fa-warehouse" style={{ marginRight: '6px', fontSize: '12px' }} />
@@ -252,13 +247,6 @@ export default function Cart() {
 									</button>
 								</div>
 							</div>
-							{item.price > 0 && (
-								<div style={{ textAlign: 'right' }}>
-									<p style={{ fontSize: '20px', fontWeight: '700', color: 'var(--accent)' }}>
-										₹ {((item.price || 0) * (item.sqftOrdered || 0)).toLocaleString()}
-									</p>
-								</div>
-							)}
 						</div>
 					))}
 				</div>
@@ -267,31 +255,9 @@ export default function Cart() {
 						const totalSqft = cart.reduce((sum, item) => {
 							return sum + (item.sqftOrdered || 0);
 						}, 0);
-						const subtotal = cart.reduce((sum, item) => {
-							return sum + ((item.price || 0) * (item.sqftOrdered || 0));
-						}, 0);
-						const tax = (subtotal * taxRate) / 100;
-						const total = Math.max(0, subtotal + tax - (discountAmount || 0));
 
 						return (
 							<>
-								<div style={{
-									background: '#f9fafb',
-									padding: '20px',
-									borderRadius: '12px',
-									border: '1px solid #e5e7eb'
-								}}>
-									<div style={{ 
-										display: 'flex', 
-										justifyContent: 'space-between', 
-										paddingTop: '16px',
-										borderTop: '2px solid #e5e7eb',
-										marginTop: '8px'
-									}}>
-										<span style={{ fontWeight: '700', fontSize: '18px' }}>Total:</span>
-										<span style={{ fontWeight: '700', fontSize: '24px', color: 'var(--accent)' }}>₹ {total.toFixed(2)}</span>
-									</div>
-								</div>
 								{totalSqft > 0 && (
 							<div style={{
 								background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
@@ -326,10 +292,6 @@ export default function Cart() {
 						</button>
 						<button
 							onClick={() => {
-								// Calculate totals
-								const subtotal = cart.reduce((sum, item) => {
-									return sum + ((item.price || 0) * (item.sqftOrdered || 0));
-								}, 0);
 								const totalSqft = cart.reduce((sum, item) => {
 									return sum + (item.sqftOrdered || 0);
 								}, 0);
@@ -339,11 +301,10 @@ export default function Cart() {
 								
 								cart.forEach((item) => {
 									const sqft = item.sqftOrdered || 0;
-									const itemTotal = (item.price || 0) * sqft;
-									message += `${item.title} - ${sqft.toLocaleString()} sq ft - ₹${itemTotal.toLocaleString()}\n`;
+									message += `${item.title} - ${sqft.toLocaleString()} sq ft\n`;
 								});
 
-								message += `\nTOTAL - ${totalSqft.toLocaleString()} sq ft - ₹${subtotal.toLocaleString()}`;
+								message += `\nTOTAL - ${totalSqft.toLocaleString()} sq ft`;
 
 								// Encode message for URL
 								const encodedMessage = encodeURIComponent(message);

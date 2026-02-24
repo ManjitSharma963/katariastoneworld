@@ -154,13 +154,6 @@ export default function CartModal({ isOpen, onClose }) {
 		);
 	}
 
-	const subtotal = cart.reduce((sum, item) => {
-		return sum + ((item.price || 0) * (item.sqftOrdered || 0));
-	}, 0);
-	const taxRateNum = taxRate === '' ? 0 : (typeof taxRate === 'number' ? taxRate : parseFloat(taxRate) || 0);
-	const tax = (subtotal * taxRateNum) / 100;
-	const total = Math.max(0, subtotal + tax - (discountAmount || 0));
-
 	return (
 		<div className="cart-modal-overlay" onClick={handleOverlayClick}>
 			<div className="cart-modal" onClick={(e) => e.stopPropagation()}>
@@ -190,9 +183,6 @@ export default function CartModal({ isOpen, onClose }) {
 								<div className="cart-item-info-clean">
 									<h3 className="cart-item-name-clean">{item.title}</h3>
 									{item.type && <p className="cart-item-category-clean">{item.type}</p>}
-									<div className="cart-item-pricing-clean">
-										<span className="cart-item-price-clean">₹ {((item.price || 0) * (item.sqftOrdered || 0)).toLocaleString()}</span>
-									</div>
 								</div>
 								<div className="cart-item-qty-clean">
 									<button
@@ -233,16 +223,12 @@ export default function CartModal({ isOpen, onClose }) {
 
 					<div className="summary-total-clean" style={{ marginTop: '16px' }}>
 						<span className="total-label-clean">Total</span>
-						<span className="total-value-clean">₹ {total.toFixed(2)}</span>
+						<span className="total-value-clean">{cart.reduce((sum, item) => sum + (item.sqftOrdered || 0), 0).toLocaleString()} sq ft</span>
 					</div>
 
 					{/* Submit for Enquiry Button */}
 					<button
 						onClick={() => {
-							// Calculate totals
-							const subtotal = cart.reduce((sum, item) => {
-								return sum + ((item.price || 0) * (item.sqftOrdered || 0));
-							}, 0);
 							const totalSqft = cart.reduce((sum, item) => {
 								return sum + (item.sqftOrdered || 0);
 							}, 0);
@@ -252,11 +238,10 @@ export default function CartModal({ isOpen, onClose }) {
 							
 							cart.forEach((item) => {
 								const sqft = item.sqftOrdered || 0;
-								const itemTotal = (item.price || 0) * sqft;
-								message += `${item.title} - ${sqft.toLocaleString()} sq ft - ₹${itemTotal.toLocaleString()}\n`;
+								message += `${item.title} - ${sqft.toLocaleString()} sq ft\n`;
 							});
 
-							message += `\nTOTAL - ${totalSqft.toLocaleString()} sq ft - ₹${subtotal.toLocaleString()}`;
+							message += `\nTOTAL - ${totalSqft.toLocaleString()} sq ft`;
 
 							// Encode message for URL
 							const encodedMessage = encodeURIComponent(message);

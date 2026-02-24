@@ -227,18 +227,6 @@ export default function InquiryForm() {
 									<div style={{ marginBottom: '8px' }}>
 										<strong>Tax:</strong> {cartData.taxPercentage || 0}%
 									</div>
-									<div style={{ marginBottom: '8px' }}>
-										<strong>Discount:</strong> ₹{(cartData.discountAmount || 0).toLocaleString()}
-									</div>
-									<div style={{ 
-										paddingTop: '12px', 
-										borderTop: '2px solid #e5e7eb',
-										marginTop: '8px',
-										fontSize: '18px',
-										fontWeight: '700'
-									}}>
-										<strong>Total Amount:</strong> ₹{(cartData.totalAmount || 0).toFixed(2)}
-									</div>
 								</div>
 							)}
 
