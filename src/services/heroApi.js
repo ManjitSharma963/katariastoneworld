@@ -1,5 +1,4 @@
-// Use full endpoint URL with fallback
-const API_BASE_URL = 'https://www.katariastoneworld.com/api';
+import { API_BASE_URL } from './apiConfig';
 
 /**
  * Fetch all hero slides from the API

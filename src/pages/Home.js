@@ -12,7 +12,7 @@ import {
 } from '../landing/data';
 import SEO from '../components/SEO';
 import { fetchHeroes } from '../services/heroApi';
-import { fetchInventory } from '../services/inventoryApi';
+import { fetchWebsiteProducts } from '../services/inventoryApi';
 import { fetchCategories, fetchMaterialCategories } from '../services/categoriesApi';
 
 export default function Home() {
@@ -53,36 +53,20 @@ export default function Home() {
 	useEffect(() => {
 		const loadStoneProducts = async () => {
 			try {
-				const inventory = await fetchInventory();
-				console.log('📦 [Home] Raw inventory data:', inventory);
-				console.log('📦 [Home] Inventory array length:', Array.isArray(inventory) ? inventory.length : 'Not an array');
-				
-				if (Array.isArray(inventory)) {
-					// Map API response to match expected format for CategoryGrid
-					// API returns: productType, pricePerUnit, quantity, unit, primaryImageUrl
-					const mappedProducts = inventory.map(product => ({
-						title: product.name || product.title || '',
-						img: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
-						sqftPerUnit: product.sqftPerUnit || product.sqft_per_unit || 30,
-						price: product.pricePerSqftAfter || product.price_per_sqft_after || product.pricePerSqft || product.price_per_sqft || product.pricePerUnit || 0,
-						pricePerSqftAfter: product.pricePerSqftAfter || product.price_per_sqft_after || product.pricePerSqft || product.price_per_sqft || product.pricePerUnit || 0,
-						totalSqft: product.quantity || product.totalSqftStock || product.total_sqft_stock || 0,
-						productType: product.productType || product.product_type || '',
-						color: product.color || '',
-						unit: product.unit || 'sqft'
-					}));
-					console.log('📦 [Home] Mapped products:', mappedProducts);
-					console.log('📦 [Home] Total products count:', mappedProducts.length);
-					console.log('📦 [Home] First section (0-4):', mappedProducts.slice(0, 4).length, 'items');
-					console.log('📦 [Home] Second section (4-8):', mappedProducts.slice(4, 8).length, 'items');
-					setStoneProducts(mappedProducts);
-				} else {
-					console.warn('⚠️ [Home] Inventory is not an array:', inventory);
-					setStoneProducts([]);
-				}
+				const list = await fetchWebsiteProducts();
+				// API returns: name, slug, description, primaryImageUrl, isActive
+				const active = (Array.isArray(list) ? list : []).filter((p) => p.isActive !== false);
+				const mappedProducts = active.map((product, idx) => ({
+					id: product.slug || `product-${idx}`,
+					title: product.name || '',
+					name: product.name || '',
+					img: product.primaryImageUrl || '',
+					primaryImageUrl: product.primaryImageUrl || '',
+					description: product.description || ''
+				}));
+				setStoneProducts(mappedProducts);
 			} catch (error) {
-				console.error('❌ [Home] Failed to load stone products from API:', error);
-				// Keep empty array on error
+				console.error('Failed to load products from website-products API:', error);
 				setStoneProducts([]);
 			}
 		};

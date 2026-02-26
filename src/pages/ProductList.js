@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import Filters from '../components/Filters';
 import Header from '../landing/Header';
 import { useCart } from '../context/CartContext';
-import { fetchInventory } from '../services/inventoryApi';
+import { fetchWebsiteProducts } from '../services/inventoryApi';
 import './ProductList.css';
 
 // Helper function to determine product type from title
@@ -31,30 +31,27 @@ const getColor = (title) => {
 	return 'multi'; // default
 };
 
-// Map API products to unified format - only use data from API
-const mapProductsFromAPI = (stoneProducts = []) => {
-	return stoneProducts.map((product, idx) => {
-		const productName = product.name || product.title || '';
-		// API returns: productType, pricePerUnit, quantity, unit, primaryImageUrl
-		const type = (product.productType || product.product_type || '').toLowerCase() || getProductType(productName);
-		const unit = product.unit || 'sqft'; // Default to sqft if not provided
-		
-		// Get price with priority: pricePerSqftAfter > price_per_sqft_after > pricePerSqft > price_per_sqft > pricePerUnit
-		const pricePerSqftAfter = product.pricePerSqftAfter || product.price_per_sqft_after || product.pricePerSqft || product.price_per_sqft || product.pricePerUnit || 0;
-		
-		return {
-			id: product.id || `product-${idx}`,
-			name: productName,
-			type: type,
-			color: (product.color || '').toLowerCase() || getColor(productName),
-			price: pricePerSqftAfter,
-			pricePerSqftAfter: pricePerSqftAfter, // Store for display
-			primaryImageUrl: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
-			img: product.primaryImageUrl || product.primary_image_url || product.img || product.image_url || '',
-			totalSqft: product.quantity || product.totalSqftStock || product.total_sqft_stock || 0,
-			unit: unit // Store unit for display
-		};
-	});
+// Map website-products API to unified format: { name, slug, description, primaryImageUrl, isActive }
+const mapProductsFromAPI = (websiteProducts = []) => {
+	return websiteProducts
+		.filter((p) => p.isActive !== false)
+		.map((product, idx) => {
+			const productName = product.name || '';
+			const type = getProductType(productName);
+			return {
+				id: product.slug || product.id || `product-${idx}`,
+				name: productName,
+				type,
+				color: getColor(productName),
+				price: 0,
+				pricePerSqftAfter: 0,
+				primaryImageUrl: product.primaryImageUrl || '',
+				img: product.primaryImageUrl || '',
+				totalSqft: 0,
+				unit: 'sqft',
+				description: product.description || ''
+			};
+		});
 };
 
 export default function ProductList() {
@@ -63,20 +60,15 @@ export default function ProductList() {
 	const [isLoading, setIsLoading] = useState(true);
 	const { addToCart } = useCart();
 
-	// Fetch products from API only
+	// Fetch products from api/website-products
 	useEffect(() => {
 		const loadProducts = async () => {
 			try {
 				setIsLoading(true);
-				const inventory = await fetchInventory();
-				if (Array.isArray(inventory)) {
-					setStoneProducts(inventory);
-				} else {
-					setStoneProducts([]);
-				}
+				const list = await fetchWebsiteProducts();
+				setStoneProducts(Array.isArray(list) ? list : []);
 			} catch (error) {
 				console.error('Failed to load products from API:', error);
-				// Keep empty array on error - no hardcoded fallback
 				setStoneProducts([]);
 			} finally {
 				setIsLoading(false);
