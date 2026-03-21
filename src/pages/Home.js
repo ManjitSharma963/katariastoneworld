@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import '../landing.css';
 import Header from '../landing/Header';
 import HeroSlider from '../landing/HeroSlider';
+import HomeAbout from '../landing/HomeAbout';
 import CategoryGrid from '../landing/CategoryGrid';
+import StoneCollectionIntro from '../landing/StoneCollectionIntro';
+import ApplicationsSection from '../landing/ApplicationsSection';
 import MaterialShowcase from '../landing/MaterialShowcase';
 import LocateStore from '../landing/LocateStore';
 import ContactCTA from '../landing/ContactCTA';
@@ -114,9 +117,16 @@ export default function Home() {
 
 	return (
 		<>
-			<SEO title="Premium Tiles & Stones in Gurgaon" keywords="tiles in Gurgaon, marble Gurgaon, granite Gurgaon, floor tiles, wall tiles, Kataria Stone World" />
+			<SEO
+				keywords="granite shop Gurgaon, marble shop Gurgaon, granite Bhondsi, marble Sohna Road, granite near me, marble dealer near me, Italian marble Gurgaon, nano tiles, imported marble, Bhondsi, stone supplier Gurgaon, floor tiles, wall tiles, kitchen countertops, Kataria Stone World"
+			/>
 			<Header />
-			<HeroSlider slides={heroSlides} />
+			<HeroSlider
+				slides={heroSlides}
+				heading="Premium Granite & Marble in Gurgaon"
+				subtext="Kataria Stone World curates granite, natural marble, nano tiles, and imported Italian slabs for kitchens, flooring, and façades—trusted by homeowners, builders, and businesses on Sohna Road, Bhondsi & across Gurgaon."
+			/>
+			<HomeAbout />
 			<CategoryGrid
 				title="Find Tiles by Category"
 				subtitle="Kataria offers premium wall and floor tiles, combining advanced technology with elegant designs for lasting quality and easy maintenance."
@@ -128,9 +138,10 @@ export default function Home() {
 				items={materialCategories}
 			/> */}
 			<MaterialShowcase images={materialImages} />
+			<StoneCollectionIntro />
 			<CategoryGrid
-				title="Premium Stone Collection"
-				subtitle="Explore our handpicked selection of premium stones and tiles, each piece carefully selected for its quality and beauty."
+				title=""
+				subtitle=""
 				items={stoneProducts.slice(0, 4)}
 				showInfo
 				enableCart
@@ -148,6 +159,7 @@ export default function Home() {
 					limitRows
 				/>
 			)}
+			<ApplicationsSection />
 			<LocateStore />
 			<ContactCTA />
 			<Footer />

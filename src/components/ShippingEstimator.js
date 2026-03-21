@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import SEO from './SEO';
 
 const CITIES = [
 	{ name: 'Gurgaon', baseKm: 0 },
@@ -21,6 +22,7 @@ export default function ShippingEstimator() {
 
 	return (
 		<div style={{ maxWidth: 480, margin: '0 auto' }}>
+			<SEO title="Shipping Estimator" description="Estimate distance and delivery for stone and tiles — Kataria Stone World, Gurgaon." />
 			<h3>Location-based shipping</h3>
 			<label>
 				Destination

@@ -1,58 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { submitBilling, formatCartItemsForBilling } from '../services/billingApi';
-import LoginModal from './LoginModal';
 import '../landing.css';
 
 export default function CartModal({ isOpen, onClose }) {
-	const { cart, removeFromCart, updateSqft, increaseSqft, decreaseSqft, getCartCount, clearCart } = useCart();
+	const { cart, removeFromCart, updateSqft, increaseSqft, decreaseSqft, getCartCount } = useCart();
 	const navigate = useNavigate();
 	const cartCount = getCartCount();
-	const [taxRate, setTaxRate] = useState(() => {
-		const saved = localStorage.getItem('cartTaxRate');
-		return saved ? parseFloat(saved) : 5;
-	});
-	const [discountAmount, setDiscountAmount] = useState(() => {
-		const saved = localStorage.getItem('cartDiscountAmount');
-		return saved ? parseFloat(saved) : 0;
-	});
-	const [mobileNumber, setMobileNumber] = useState(() => {
-		const saved = localStorage.getItem('cartMobileNumber');
-		return saved || '';
-	});
-	const [customerName, setCustomerName] = useState(() => {
-		const saved = localStorage.getItem('cartCustomerName');
-		return saved || '';
-	});
-	const [addressLine1, setAddressLine1] = useState(() => {
-		const saved = localStorage.getItem('cartAddressLine1');
-		return saved || '';
-	});
-	const [city, setCity] = useState(() => {
-		const saved = localStorage.getItem('cartCity');
-		return saved || '';
-	});
-	const [state, setState] = useState(() => {
-		const saved = localStorage.getItem('cartState');
-		return saved || '';
-	});
-	const [pincode, setPincode] = useState(() => {
-		const saved = localStorage.getItem('cartPincode');
-		return saved || '';
-	});
-	const [gstin, setGstin] = useState(() => {
-		const saved = localStorage.getItem('cartGstin');
-		return saved || '';
-	});
-	const [email, setEmail] = useState(() => {
-		const saved = localStorage.getItem('cartEmail');
-		return saved || '';
-	});
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [submitError, setSubmitError] = useState('');
-	const [showLoginModal, setShowLoginModal] = useState(false);
-	const [pendingBillingData, setPendingBillingData] = useState(null);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -64,47 +18,6 @@ export default function CartModal({ isOpen, onClose }) {
 			document.body.style.overflow = '';
 		};
 	}, [isOpen]);
-
-	useEffect(() => {
-		const taxRateToSave = taxRate === '' ? 0 : (typeof taxRate === 'number' ? taxRate : parseFloat(taxRate) || 0);
-		localStorage.setItem('cartTaxRate', taxRateToSave.toString());
-	}, [taxRate]);
-
-	useEffect(() => {
-		localStorage.setItem('cartDiscountAmount', discountAmount.toString());
-	}, [discountAmount]);
-
-	useEffect(() => {
-		localStorage.setItem('cartMobileNumber', mobileNumber);
-	}, [mobileNumber]);
-
-	useEffect(() => {
-		localStorage.setItem('cartCustomerName', customerName);
-	}, [customerName]);
-
-	useEffect(() => {
-		localStorage.setItem('cartAddressLine1', addressLine1);
-	}, [addressLine1]);
-
-	useEffect(() => {
-		localStorage.setItem('cartCity', city);
-	}, [city]);
-
-	useEffect(() => {
-		localStorage.setItem('cartState', state);
-	}, [state]);
-
-	useEffect(() => {
-		localStorage.setItem('cartPincode', pincode);
-	}, [pincode]);
-
-	useEffect(() => {
-		localStorage.setItem('cartGstin', gstin);
-	}, [gstin]);
-
-	useEffect(() => {
-		localStorage.setItem('cartEmail', email);
-	}, [email]);
 
 	if (!isOpen) return null;
 
@@ -248,97 +161,16 @@ export default function CartModal({ isOpen, onClose }) {
 							const whatsappNumber = '919996965755';
 							const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
 
-							// Navigate to WhatsApp directly
-							window.location.href = whatsappUrl;
+							// Open WhatsApp in a new tab so this site stays open
+							window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 						}}
 						className="cart-checkout-btn-clean"
 						disabled={cart.length === 0}
 					>
 						Submit for Enquiry
 					</button>
-					{submitError && (
-						<div style={{
-							marginTop: '12px',
-							padding: '12px',
-							background: '#fee2e2',
-							border: '1px solid #fca5a5',
-							borderRadius: '8px',
-							color: '#dc2626',
-							fontSize: '14px',
-							display: 'flex',
-							alignItems: 'center',
-							gap: '8px'
-						}}>
-							<i className="fa-solid fa-circle-exclamation" />
-							<span>{submitError}</span>
-						</div>
-					)}
 				</div>
 			</div>
-			<LoginModal
-				isOpen={showLoginModal}
-				onClose={() => {
-					setShowLoginModal(false);
-					setPendingBillingData(null);
-				}}
-				onSuccess={async (token) => {
-					// After successful login, proceed with billing submission
-					if (pendingBillingData) {
-						setIsSubmitting(true);
-						setSubmitError('');
-						setShowLoginModal(false);
-						
-						try {
-							console.log('Submitting billing data...', pendingBillingData);
-							
-							// Add timeout to prevent infinite loading
-							const timeoutPromise = new Promise((_, reject) => 
-								setTimeout(() => reject(new Error('Request timeout: Server took too long to respond')), 30000)
-							);
-							
-							// Submit to billing API with timeout
-							const billingPromise = submitBilling(pendingBillingData);
-							await Promise.race([billingPromise, timeoutPromise]);
-
-							console.log('Billing submitted successfully');
-							
-							// Success - clear all inputs and cart
-							setCustomerName('');
-							setMobileNumber('');
-							setEmail('');
-							setAddressLine1('');
-							setCity('');
-							setState('');
-							setPincode('');
-							setGstin('');
-							setTaxRate(5);
-							setDiscountAmount(0);
-							clearCart();
-							setPendingBillingData(null);
-							onClose();
-							alert('Order submitted successfully!');
-							// Stay on current page - don't navigate to home
-						} catch (error) {
-							console.error('Billing API error:', error);
-							setIsSubmitting(false);
-							
-							// Check if error is due to invalid token
-							if (error.message && (error.message.includes('401') || error.message.includes('Unauthorized') || error.message.includes('token'))) {
-								// Token invalid - remove it and show login again
-								localStorage.removeItem('access_token');
-								setShowLoginModal(true);
-								setSubmitError('Session expired. Please login again.');
-							} else if (error.message && error.message.includes('timeout')) {
-								setSubmitError('Request timeout: Server took too long to respond. Please check your connection and try again.');
-							} else if (error.message && error.message.includes('Failed to fetch')) {
-								setSubmitError('Network error: Unable to connect to server. Please check your internet connection.');
-							} else {
-								setSubmitError(error.message || 'Failed to submit order. Please try again.');
-							}
-						}
-					}
-				}}
-			/>
 		</div>
 	);
 }

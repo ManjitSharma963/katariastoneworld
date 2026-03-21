@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SEO from './SEO';
 
 export default function Calculator() {
 	const [lengthFeet, setLengthFeet] = useState('');
@@ -11,6 +12,7 @@ export default function Calculator() {
 
 	return (
 		<div style={{ maxWidth: 480, margin: '0 auto' }}>
+			<SEO title="Square Foot Calculator" description="Calculate area in sq ft for your tile and stone project — Kataria Stone World, Sohna Road Gurgaon." />
 			<h2>Square-foot calculator</h2>
 			<div style={{ display: 'grid', gap: 12 }}>
 				<label>

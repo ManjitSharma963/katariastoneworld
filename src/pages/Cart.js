@@ -4,10 +4,6 @@ import { useCart } from '../context/CartContext';
 import Header from '../landing/Header';
 import Footer from '../landing/Footer';
 import SEO from '../components/SEO';
-import { submitBilling, formatCartItemsForBilling } from '../services/billingApi';
-import { getAccessToken } from '../services/authApi';
-import LoginModal from '../components/LoginModal';
-
 export default function Cart() {
 	const { cart, removeFromCart, updateSqft, increaseSqft, decreaseSqft, getCartCount, clearCart } = useCart();
 	const navigate = useNavigate();
@@ -52,11 +48,6 @@ export default function Cart() {
 		const saved = localStorage.getItem('cartEmail');
 		return saved || '';
 	});
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [submitError, setSubmitError] = useState('');
-	const [showLoginModal, setShowLoginModal] = useState(false);
-	const [pendingBillingData, setPendingBillingData] = useState(null);
-
 	useEffect(() => {
 		localStorage.setItem('cartTaxRate', taxRate.toString());
 	}, [taxRate]);
@@ -311,8 +302,8 @@ export default function Cart() {
 								const whatsappNumber = '919996965755';
 								const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
 
-								// Navigate to WhatsApp directly
-								window.location.href = whatsappUrl;
+								// Open WhatsApp in a new tab so this site stays open
+								window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 							}}
 							className="cta"
 							style={{ cursor: 'pointer' }}
@@ -320,63 +311,10 @@ export default function Cart() {
 						>
 							Submit for Enquiry <i className="fa-solid fa-arrow-right" style={{ marginLeft: '8px', fontSize: '12px' }} />
 						</button>
-						{submitError && (
-							<div style={{
-								marginTop: '12px',
-								padding: '12px',
-								background: '#fee2e2',
-								border: '1px solid #fca5a5',
-								borderRadius: '8px',
-								color: '#dc2626',
-								fontSize: '14px',
-								display: 'flex',
-								alignItems: 'center',
-								gap: '8px'
-							}}>
-								<i className="fa-solid fa-circle-exclamation" />
-								<span>{submitError}</span>
-							</div>
-						)}
 					</div>
 				</div>
 			</div>
 			<Footer />
-			<LoginModal
-				isOpen={showLoginModal}
-				onClose={() => {
-					setShowLoginModal(false);
-					setPendingBillingData(null);
-				}}
-				onSuccess={async (token) => {
-					// After successful login, proceed with billing
-					if (pendingBillingData) {
-						setIsSubmitting(true);
-						setSubmitError('');
-						try {
-							await submitBilling(pendingBillingData);
-							
-							// Success - clear all inputs and cart
-							setCustomerName('');
-							setMobileNumber('');
-							setEmail('');
-							setAddressLine1('');
-							setCity('');
-							setState('');
-							setPincode('');
-							setGstin('');
-							setTaxRate(5);
-							setDiscountAmount(0);
-							clearCart();
-							alert('Order submitted successfully!');
-							navigate('/');
-						} catch (error) {
-							console.error('Billing API error:', error);
-							setSubmitError('Failed to submit order. Please try again.');
-							setIsSubmitting(false);
-						}
-					}
-				}}
-			/>
 		</>
 	);
 }

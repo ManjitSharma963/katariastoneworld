@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SEO from '../components/SEO';
 
 export default function AdminDashboard() {
 	const [items, setItems] = useState([
@@ -18,6 +19,7 @@ export default function AdminDashboard() {
 
 	return (
 		<div style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gap: 16 }}>
+			<SEO title="Admin" description="Kataria Stone World — internal admin." />
 			<h2>Admin dashboard</h2>
 			<form onSubmit={addItem} style={{ display: 'grid', gap: 8, gridTemplateColumns: '1fr 2fr 1fr auto' }}>
 				<input placeholder="SKU" value={draft.id} onChange={(e) => setDraft({ ...draft, id: e.target.value })} />

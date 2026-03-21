@@ -21,6 +21,12 @@ A modern, responsive e-commerce website for stone tiles, marbles, and granites. 
 - **Billing System**: Generate bills and invoices for customers
 - **Inventory Management**: Track product stock and availability
 
+## SEO (search engines)
+
+- **Static shell**: `public/index.html` includes the default `<title>` and meta description so crawlers see real text before JavaScript runs.
+- **Per-route meta**: `src/components/SEO.js` (react-helmet-async) updates title, description, keywords, Open Graph, and Twitter cards on each page.
+- **Next.js / SSR**: This project is a **Create React App** SPA. For full server-side rendering or static generation (e.g. all content in the first HTML response), you would migrate to **Next.js** or add a prerender step (e.g. `react-snap`). The setup above is the standard CRA approach for SEO.
+
 ## 🚀 Tech Stack
 
 - **Frontend Framework**: React 19.2.0
@@ -93,7 +99,6 @@ stone-tiles-website/
 │   ├── components/        # Reusable components
 │   │   ├── CartModal.js   # Shopping cart modal
 │   │   ├── Calculator.js  # Price calculator
-│   │   ├── Filters.js     # Product filters
 │   │   ├── InquiryForm.js # Inquiry form
 │   │   ├── LoginModal.js  # Login modal
 │   │   ├── SEO.js         # SEO component

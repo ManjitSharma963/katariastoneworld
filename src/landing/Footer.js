@@ -1,8 +1,33 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+
+const localBusinessJsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'LocalBusiness',
+	name: 'Kataria Stone World',
+	description:
+		'Premium granite, marble, nano tiles and stone supplier on Sohna Road, Bhondsi, Gurgaon.',
+	address: {
+		'@type': 'PostalAddress',
+		streetAddress: 'Sohna Road, Bhondsi',
+		addressLocality: 'Gurgaon',
+		addressRegion: 'Haryana',
+		addressCountry: 'IN'
+	},
+	telephone: ['+91-8107707064', '+91-9996657779'],
+	url: 'https://www.katariastoneworld.com'
+};
 
 export default function Footer() {
 	return (
 		<footer className="footer">
+			<Helmet>
+				<script type="application/ld+json">
+					{JSON.stringify(localBusinessJsonLd)}
+				</script>
+			</Helmet>
+
 			<div className="footer-container">
 				<div className="footer-links">
 					<div className="footer-col">
@@ -36,25 +61,42 @@ export default function Footer() {
 							<li>About us</li>
 							<li>Code of Conduct</li>
 							<li>Career</li>
+							<li>
+								<Link to="/blog">Blog</Link>
+							</li>
 							<li>Contact Us</li>
 						</ul>
 					</div>
 					<div className="footer-col">
-						<h3>Contact Info</h3>
+						<h3>Visit us</h3>
 						<ul>
 							<li>
-								<strong>Address:</strong><br />
-								10, Badshahpur Sohna Rd Hwy,<br />
-								Bhondsi, Gurugram, Haryana 122102
+								<strong>Kataria Stone World</strong>
+								<br />
+								Sohna Road, Bhondsi
+								<br />
+								Gurgaon, Haryana
 							</li>
 							<li>
-								<strong>Mobile:</strong><br />
-								<a href="tel:+918107707064">+91 81077 07064</a>
+								<strong>Call</strong>
+								<br />
+								<span className="footer-phone-row">
+									<a href="tel:+918107707064" className="footer-tel">
+										8107707064
+									</a>
+									<span className="footer-phone-sep"> / </span>
+									<a href="tel:+919996657779" className="footer-tel">
+										9996657779
+									</a>
+								</span>
 							</li>
 							<li>
-								<strong>Location:</strong><br />
-								<a href="https://maps.app.goo.gl/Dnr5Z46ZmsnxV7YDA" target="_blank" rel="noreferrer">
-									View on Google Maps
+								<a
+									href="https://maps.app.goo.gl/Dnr5Z46ZmsnxV7YDA"
+									target="_blank"
+									rel="noreferrer"
+								>
+									Google Maps — directions
 								</a>
 							</li>
 						</ul>
@@ -64,11 +106,16 @@ export default function Footer() {
 			<div className="footer-bottom">
 				<div className="download-app">
 					<span>Download App</span>
-					<img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play" />
-					<img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" />
+					<img
+						src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+						alt="Google Play"
+					/>
+					<img
+						src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+						alt="App Store"
+					/>
 				</div>
 			</div>
 		</footer>
 	);
 }
-

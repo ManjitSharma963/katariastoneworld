@@ -25,6 +25,7 @@ export default function Header() {
 						<Link to="/">Home</Link>
 						<a href="#categories">Categories</a>
 						<Link to="/products">Products</Link>
+						<Link to="/blog">Blog</Link>
 						<Link to="/inquiry">Contact</Link>
 					</nav>
 					<div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

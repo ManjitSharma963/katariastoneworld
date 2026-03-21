@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import Filters from '../components/Filters';
+import SEO from '../components/SEO';
 import Header from '../landing/Header';
 import { useCart } from '../context/CartContext';
 import { fetchWebsiteProducts } from '../services/inventoryApi';
@@ -55,7 +55,6 @@ const mapProductsFromAPI = (websiteProducts = []) => {
 };
 
 export default function ProductList() {
-	const [filters, setFilters] = useState({ type: '', color: '' });
 	const [stoneProducts, setStoneProducts] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const { addToCart } = useCart();
@@ -83,22 +82,7 @@ export default function ProductList() {
 		return mapProductsFromAPI(stoneProducts);
 	}, [stoneProducts]);
 
-	const products = useMemo(() => {
-		return allProducts.filter((p) => {
-			// Category/Type filter - flexible matching
-			if (filters.type) {
-				const productType = (p.type || '').toLowerCase().replace(/\s+/g, '-');
-				const filterType = filters.type.toLowerCase();
-				// Match exact or if product type contains filter type
-				if (productType !== filterType && !productType.includes(filterType) && !filterType.includes(productType)) {
-					return false;
-				}
-			}
-			// Color filter
-			if (filters.color && !p.color.toLowerCase().includes(filters.color.toLowerCase())) return false;
-			return true;
-		});
-	}, [allProducts, filters]);
+	const products = allProducts;
 
 	const handleAddToCart = (product) => {
 		addToCart({
@@ -114,11 +98,14 @@ export default function ProductList() {
 
 	return (
 		<>
+			<SEO
+				title="Marble, Granite & Tiles"
+				description="Browse premium granite, Italian marble & nano tiles at Kataria Stone World — Bhondsi, Sohna Road Gurgaon."
+				keywords="products, granite, marble, tiles, Gurgaon, Sohna Road, Bhondsi, Kataria Stone World"
+			/>
 			<Header />
 			<div className="products-page">
 				<div className="products-container">
-			<Filters filters={filters} onChange={setFilters} />
-
 				{isLoading ? (
 					<div className="no-products">
 						<div className="no-products-icon">
@@ -161,7 +148,7 @@ export default function ProductList() {
 						</div>
 						<h3 className="no-products-title">No products found</h3>
 						<p className="no-products-text">
-							No products match the selected filters. Try adjusting your filters to see more results.
+							No products are listed at the moment. Please check back soon or contact us for availability.
 						</p>
 					</div>
 				)}
